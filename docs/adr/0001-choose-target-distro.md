@@ -1,0 +1,1 @@
+markdown<br># 0001 – Choose target distro<br><br>## Context<br>ROS 2 offers Humble (2022) and Jazzy (2024, LTS to May 2029). We want the longest support window.<br><br>## Decision<br>We freeze on **Ubuntu 24.04 LTS + ROS 2 Jazzy Jalisco**.<br><br>## Consequences<br>* CI matrix default: `ubuntu-24.04`, `jazzy`.<br>* Any demo hardware must run the same pair.<br>
