@@ -26,11 +26,10 @@ jobs:
       - name: Install dependencies
         run: |
           rosdep update
-          rosdep install --from-paths ros2_ws/src --ignore-src -r -y
+          rosdep install --from-paths ros2_ws/ros2_ws/src --ignore-src -r -y
 
       - name: Build
         run: |
           source /opt/ros/jazzy/setup.bash
-          cd ros2_ws
+          cd ros2_ws/ros2_ws
           colcon build --event-handlers console_direct+
-
