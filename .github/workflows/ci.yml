@@ -1,1 +1,31 @@
-yaml<br>strategy:<br> matrix:<br> os: [ubuntu-24.04]<br> ros: [jazzy]<br>
+name: ROS 2 CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup ROS 2
+        uses: ros-tooling/setup-ros@v0.7
+        with:
+          required-ros-distributions: jazzy
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          rosdep update
+          rosdep install --from-paths ros2_ws/src --ignore-src -r -y
+
+      - name: Build
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          cd ros2_ws
+          colcon build --event-handlers console_direct+
+
