@@ -33,7 +33,7 @@ jobs:
           source /opt/ros/humble/setup.bash
           cd ros2_ws
           colcon build --event-handlers console_direct+
-   simulate:
+  simulate:
     runs-on: ubuntu-22.04
     needs: build  # Waits for build job to succeed
 
