@@ -1,1 +1,1 @@
-Target platform: Ubuntu 24.04 LTS · ROS 2 Jazzy (LTS)
+Target platform: Ubuntu 22.04 LTS · ROS 2 humble (LTS)
