@@ -62,9 +62,9 @@ jobs:
           cd ros2_ws
           colcon build
 
-      - name: Launch simulation
+      - name: Launch simulation (via ros2 launch)
         run: |
           source /opt/ros/humble/setup.bash
           source ros2_ws/install/setup.bash
-          ros2 run sim_demo sim_demo
+          ros2 launch sim_demo sim.launch.py
 
