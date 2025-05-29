@@ -62,16 +62,19 @@ jobs:
           cd ros2_ws
           colcon build
 
-      - name: Launch simulation (via ros2 launch)
+      - name: Launch simulation (timed)
         run: |
           source /opt/ros/humble/setup.bash
           source ros2_ws/install/setup.bash
-          ros2 launch sim_demo sim.launch.py
+          echo "[CI] Launching simulation for 15 seconds..."
+          timeout 15 ros2 launch sim_demo sim.launch.py
+          echo "[CI] Launch exited cleanly."
+
 
   docker:
     runs-on: ubuntu-22.04
     needs: simulate
-    
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
