@@ -5,45 +5,48 @@ on:
     branches: [main]
   pull_request:
 
+env:
+  DOCKER_BUILDKIT: 1
+
 jobs:
   build:
     runs-on: ubuntu-22.04
 
+    container:
+      image: ros:humble-ros-base
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-
-      - name: Install ROS 2 base tools
-        run: |
-          sudo apt update
-          sudo apt install --no-install-recommends --quiet --yes ros-humble-ros-base
-
       - name: Install dependencies
         run: |
+          apt update
+          apt install -y python3-colcon-common-extensions python3-pip
           rosdep update
           rosdep install --from-paths ros2_ws/src --ignore-src -r -y
 
-      - name: Build
+      - name: Build workspace
         run: |
           source /opt/ros/humble/setup.bash
           cd ros2_ws
           colcon build --event-handlers console_direct+
+
   simulate:
     runs-on: ubuntu-22.04
-    needs: build  # Waits for build job to succeed
+    needs: build
+
+    container:
+      image: ros:humble-ros-base
 
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Install ROS 2 base tools
-        run: |
-          sudo apt update
-          sudo apt install --no-install-recommends --quiet --yes ros-humble-ros-base
-
       - name: Install dependencies
         run: |
+          apt update
+          apt install -y python3-colcon-common-extensions python3-pip
           rosdep update
           rosdep install --from-paths ros2_ws/src --ignore-src -r -y
 
@@ -60,6 +63,7 @@ jobs:
           echo "[CI] Launching simulation for 15 seconds..."
           timeout 15 ros2 launch sim_demo sim.launch.py || [[ $? == 124 ]]
           echo "[CI] Launch exited cleanly."
+
   docker:
     runs-on: ubuntu-22.04
     needs: simulate
@@ -79,5 +83,3 @@ jobs:
           IMAGE_NAME=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/ros2_cicd:latest
           docker build -t "$IMAGE_NAME" .
           docker push "$IMAGE_NAME"
-
-
