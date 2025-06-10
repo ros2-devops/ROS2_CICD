@@ -6,7 +6,48 @@ on:
   pull_request:
 
 jobs:
+  simulate:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup ROS 2
+        uses: ros-tooling/setup-ros@v0.7
+        with:
+          required-ros-distributions: humble
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y \
+            python3-colcon-common-extensions \
+            python3-pip python3-rosdep \
+            ros-humble-ros-base ros-humble-vision-msgs \
+            webots
+
+      - name: Build workspace
+        run: |
+          cd ros2_ws
+          colcon build
+
+      - name: Run simulation (timed)
+        run: |
+          source /opt/ros/humble/setup.bash
+          source ros2_ws/install/setup.bash
+          echo "[CI] Launching simulation for 15s..."
+          timeout 15 ros2 launch sim_demo webots_sim.launch.py || true
+          echo "[CI] Simulation complete"
+
+      - name: Upload simulation metrics
+        uses: actions/upload-artifact@v4
+        with:
+          name: ros_metrics
+          path: ~/ros_metrics.csv
+
   docker:
+    needs: simulate
     runs-on: ubuntu-22.04
 
     steps:
