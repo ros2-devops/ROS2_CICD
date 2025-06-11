@@ -17,17 +17,16 @@ jobs:
         uses: ros-tooling/setup-ros@v0.7
         with:
           required-ros-distributions: humble
-          
-
 
       - name: Install dependencies
         run: |
-          sudo apt update
-          sudo apt install -y \
+          sudo apt update || sudo apt update
+          sudo apt install -y --no-install-recommends \
             python3-colcon-common-extensions \
             python3-pip python3-rosdep \
             ros-humble-ros-base ros-humble-vision-msgs \
-            webots
+            webots || sudo apt -f install -y
+
 
       - name: Build workspace
         run: |
