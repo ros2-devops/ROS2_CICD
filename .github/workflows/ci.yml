@@ -13,10 +13,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup ROS 2
+      - name: Setup ROS 2 Humble
         uses: ros-tooling/setup-ros@v0.7
         with:
           required-ros-distributions: humble
+          
+
 
       - name: Install dependencies
         run: |
@@ -37,7 +39,7 @@ jobs:
           source /opt/ros/humble/setup.bash
           source ros2_ws/install/setup.bash
           echo "[CI] Launching simulation for 15s..."
-          timeout 15 ros2 launch sim_demo webots_sim.launch.py || true
+          timeout 15 ros2 launch sim_demo webots_sim.launch.py
           echo "[CI] Simulation complete"
 
       - name: Upload simulation metrics

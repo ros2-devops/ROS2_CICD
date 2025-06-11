@@ -1,38 +1,57 @@
+#!/usr/bin/env python3
+
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import String
 import psutil
-import time
 import csv
-
+import time
+import os
+import sys
 
 class MetricsCollector(Node):
     def __init__(self):
         super().__init__('metrics_collector')
-        self.declare_parameter('log_interval', 2.0)
-        interval = self.get_parameter('log_interval').get_parameter_value().double_value
+        self.metrics_file = os.path.expanduser("~/ros_metrics.csv")
+        self.timer = self.create_timer(1.0, self.collect_metrics)
+        self.start_time = time.time()
+        self.duration = 10  # seconds to run metrics
+        self.cpu_usage_values = []
+        self.memory_usage_values = []
+        self.get_logger().info("MetricsCollector node started.")
 
-        self.log_timer = self.create_timer(interval, self.log_metrics)
-
-        self.cpu_log = []
-        self.mem_log = []
-
-        self.get_logger().info('✅ MetricsCollector started...')
-
-    def log_metrics(self):
+    def collect_metrics(self):
+        elapsed = time.time() - self.start_time
         cpu = psutil.cpu_percent()
-        mem = psutil.virtual_memory().percent
-        timestamp = self.get_clock().now().to_msg()
+        memory = psutil.virtual_memory().percent
+        self.cpu_usage_values.append(cpu)
+        self.memory_usage_values.append(memory)
 
-        self.get_logger().info(f'[Metrics] CPU: {cpu}% | Memory: {mem}%')
+        self.get_logger().info(f"[Metrics] CPU: {cpu}%, Memory: {memory}%")
 
-        self.cpu_log.append((timestamp.sec, cpu))
-        self.mem_log.append((timestamp.sec, mem))
-        with open('/home/ec24136/ros_metrics.csv', 'w', newline='') as f:
+        # Write to CSV
+        with open(self.metrics_file, mode='a', newline='') as f:
             writer = csv.writer(f)
-            writer.writerow(['Timestamp', 'CPU (%)', 'Memory (%)'])
-            for ts, c in zip(self.cpu_log, self.mem_log):
-                writer.writerow([ts[0], ts[1], c[1]])
+            writer.writerow([elapsed, cpu, memory])
+
+        if elapsed >= self.duration:
+            self.timer.cancel()
+            self.evaluate_metrics()
+
+    def evaluate_metrics(self):
+        avg_cpu = sum(self.cpu_usage_values) / len(self.cpu_usage_values)
+        avg_mem = sum(self.memory_usage_values) / len(self.memory_usage_values)
+
+        self.get_logger().info(f"[Evaluation] Avg CPU: {avg_cpu:.2f}%, Avg Mem: {avg_mem:.2f}%")
+
+        # Runtime assertion: fail if average CPU > 90% or memory > 85%
+        if avg_cpu > 90 or avg_mem > 85:
+            self.get_logger().error("[ASSERTION FAILED] Resource usage too high.")
+            rclpy.shutdown()
+            sys.exit(1)
+        else:
+            self.get_logger().info("[ASSERTION PASSED] System metrics are within limits.")
+            rclpy.shutdown()
+            sys.exit(0)
 
 def main(args=None):
     rclpy.init(args=args)
@@ -41,6 +60,8 @@ def main(args=None):
         rclpy.spin(node)
     except KeyboardInterrupt:
         pass
-    finally:
-        node.destroy_node()
-        rclpy.shutdown()
+    node.destroy_node()
+    rclpy.shutdown()
+
+if __name__ == '__main__':
+    main()
