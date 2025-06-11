@@ -17,6 +17,7 @@ jobs:
         uses: ros-tooling/setup-ros@v0.7
         with:
           required-ros-distributions: humble
+          skip-apt-upgrade: true
 
       - name: Install dependencies
         run: |
