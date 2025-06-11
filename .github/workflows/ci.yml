@@ -42,7 +42,7 @@ jobs:
           source /opt/ros/humble/setup.bash
           source ros2_ws/install/setup.bash
           echo "[CI] Launching simulation for 15s..."
-          timeout 15 ros2 launch sim_demo webots_sim.launch.py
+          timeout 15 ros2 launch sim_demo webots_sim.launch.py || [[ $? == 124 ]]
           echo "[CI] Simulation complete"
 
       - name: Upload simulation metrics
