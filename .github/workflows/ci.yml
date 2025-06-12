@@ -8,6 +8,8 @@ on:
 jobs:
   simulate:
     runs-on: ubuntu-22.04
+    outputs:
+      result: ${{ steps.run_sim.outputs.result }}
 
     steps:
       - name: Checkout repository
