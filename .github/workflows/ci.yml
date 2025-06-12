@@ -14,7 +14,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup ROS 2 Humble
-        uses: ros-tooling/setup-ros@v0.7
+        uses: ros-tooling/setup-ros@v0.7.1
         with:
           required-ros-distributions: humble
           skip-apt-upgrade: true
@@ -30,29 +30,50 @@ jobs:
             ros-humble-ament-cmake \
             webots || sudo apt -f install -y
 
-
       - name: Build workspace
         run: |
           source /opt/ros/humble/setup.bash
           cd ros2_ws
           colcon build
 
-      - name: Run simulation (timed)
+      - name: Run simulation with assertions
+        id: run_sim
         run: |
           source /opt/ros/humble/setup.bash
           source ros2_ws/install/setup.bash
-          echo "[CI] Launching simulation for 15s..."
-          timeout 15 ros2 launch sim_demo webots_sim.launch.py || [[ $? == 124 ]]
+          echo "[CI] Launching simulation..."
+          timeout 20 ros2 launch sim_demo webots_sim.launch.py duration:=10 log_interval:=1.0 || [[ $? == 124 ]]
           echo "[CI] Simulation complete"
+          # Check if assertion_result.txt exists and read it
+          RESULT_FILE=~/assertion_result.txt
+          if [[ -f "$RESULT_FILE" ]]; then
+            RESULT=$(cat "$RESULT_FILE")
+            echo "Assertion Result: $RESULT"
+            echo "result=$RESULT" >> $GITHUB_OUTPUT
+            if [[ "$RESULT" == "FAIL" ]]; then
+              echo "::error Assertion failed during simulation."
+              exit 1
+            fi
+          else
+            echo "::error assertion_result.txt not found."
+            exit 1
+          fi
 
-      - name: Upload simulation metrics
+      - name: Upload metrics
         uses: actions/upload-artifact@v4
         with:
           name: ros_metrics
           path: ~/ros_metrics.csv
 
+      - name: Upload assertion result
+        uses: actions/upload-artifact@v4
+        with:
+          name: assertion_result
+          path: ~/assertion_result.txt
+
   docker:
     needs: simulate
+    if: needs.simulate.outputs.result == 'PASS'
     runs-on: ubuntu-22.04
 
     steps:

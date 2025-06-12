@@ -10,48 +10,51 @@ import sys
 
 class MetricsCollector(Node):
     def __init__(self):
-        super().__init__('metrics_collector')
-        self.metrics_file = os.path.expanduser("~/ros_metrics.csv")
-        self.timer = self.create_timer(1.0, self.collect_metrics)
-        self.start_time = time.time()
-        self.duration = 10  # seconds to run metrics
-        self.cpu_usage_values = []
-        self.memory_usage_values = []
+        super().__init__('metrics_node')
+        self.metrics_file = os.path.expanduser('~/ros_metrics.csv')
+        self.result_file = os.path.expanduser('~/assertion_result.txt')
+        self.timer_period = 1.0
+        self.max_duration = int(os.getenv('SIM_DURATION', 10))  # fallback
+        self.cpu_threshold = 85.0
+        self.mem_threshold = 80.0
+        self.cpu_violations = 0
+        self.memory_violations = 0
         self.get_logger().info("MetricsCollector node started.")
+        self.cpu_log = []
+        self.mem_log = []
+        self.start_time = time.time()
+        self.timer = self.create_timer(self.timer_period, self.collect_metrics)
 
     def collect_metrics(self):
         elapsed = time.time() - self.start_time
         cpu = psutil.cpu_percent()
-        memory = psutil.virtual_memory().percent
-        self.cpu_usage_values.append(cpu)
-        self.memory_usage_values.append(memory)
+        mem = psutil.virtual_memory().percent
+        self.cpu_log.append(cpu)
+        self.mem_log.append(mem)
 
-        self.get_logger().info(f"[Metrics] CPU: {cpu}%, Memory: {memory}%")
+        if cpu > self.cpu_threshold:
+            self.cpu_violations += 1
+        if mem > self.mem_threshold:
+            self.memory_violations += 1
 
-        # Write to CSV
-        with open(self.metrics_file, mode='a', newline='') as f:
-            writer = csv.writer(f)
-            writer.writerow([elapsed, cpu, memory])
+        self.get_logger().info(f"[Metrics] CPU: {cpu:.1f}%, Mem: {mem:.1f}%")
 
-        if elapsed >= self.duration:
-            self.timer.cancel()
-            self.evaluate_metrics()
+        with open(self.metrics_file, 'a', newline='') as f:
+            csv.writer(f).writerow([elapsed, cpu, mem])
 
-    def evaluate_metrics(self):
-        avg_cpu = sum(self.cpu_usage_values) / len(self.cpu_usage_values)
-        avg_mem = sum(self.memory_usage_values) / len(self.memory_usage_values)
+        if elapsed >= self.max_duration:
+            self.evaluate()
 
-        self.get_logger().info(f"[Evaluation] Avg CPU: {avg_cpu:.2f}%, Avg Mem: {avg_mem:.2f}%")
-
-        # Runtime assertion: fail if average CPU > 90% or memory > 85%
-        if avg_cpu > 90 or avg_mem > 85:
-            self.get_logger().error("[ASSERTION FAILED] Resource usage too high.")
-            rclpy.shutdown()
-            sys.exit(1)
-        else:
-            self.get_logger().info("[ASSERTION PASSED] System metrics are within limits.")
-            rclpy.shutdown()
-            sys.exit(0)
+    def evaluate(self):
+        result = "PASS"
+        if self.cpu_violations >= 2 or self.memory_violations > 0:
+            result = "FAIL"
+        with open(self.result_file, 'w') as f:
+            f.write(result)
+        self.get_logger().info(f"[Evaluation] CPU violations: {self.cpu_violations}, Mem violations: {self.memory_violations}")
+        self.get_logger().info(f"[Assertion Result] {result}")
+        rclpy.shutdown()
+        sys.exit(0 if result == "PASS" else 1)
 
 def main(args=None):
     rclpy.init(args=args)
