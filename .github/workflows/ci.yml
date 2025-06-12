@@ -64,24 +64,23 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ros_metrics
-          path: ~/ros_metrics.csv
+          path: ros_metrics.csv
 
       - name: Upload assertion result
         uses: actions/upload-artifact@v4
         with:
           name: assertion_result
-          path: ~/assertion_result.txt
+          path: assertion_result.txt
 
       - name: Upload simulation log
         uses: actions/upload-artifact@v4
         with:
           name: simulation_log
-          path: ~/simulation_log.csv
+          path: simulation_log.csv
 
       - name: Install plotting tools (compatible versions)
         run: |
           pip3 install 'numpy<2.0' matplotlib pandas
-
 
       - name: Generate CPU/Memory plots
         run: |

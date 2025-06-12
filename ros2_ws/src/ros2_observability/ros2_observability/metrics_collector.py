@@ -57,7 +57,7 @@ class MetricsCollector(Node):
         sys.exit(0 if result == "PASS" else 1)
         timestamp = datetime.now().isoformat()
         scenario = os.getenv("SCENARIO", "unknown")
-        log_file = os.path.expanduser("~/simulation_log.csv")
+        log_file = os.path.join(os.getcwd(), "simulation_log.csv")
         with open(log_file, 'a') as f:
             f.write(f"{timestamp},{scenario},{result}\n")
 

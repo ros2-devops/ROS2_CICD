@@ -2,7 +2,7 @@ import pandas as pd
 from datetime import datetime
 
 # Load simulation log
-log_path = '/home/runner/simulation_log.csv'
+log_path = 'simulation_log.csv'
 try:
     log_df = pd.read_csv(log_path, header=None, names=['timestamp', 'scenario', 'result'])
 except Exception as e:
