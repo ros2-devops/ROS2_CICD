@@ -42,10 +42,10 @@ jobs:
         run: |
           source /opt/ros/humble/setup.bash
           source ros2_ws/install/setup.bash
+          export SCENARIO=demo1
           echo "[CI] Launching simulation..."
           timeout 20 ros2 launch sim_demo webots_sim.launch.py duration:=10 log_interval:=1.0 scenario:=demo1 || [[ $? == 124 ]]
           echo "[CI] Simulation complete"
-          # Check if assertion_result.txt exists and read it
           RESULT_FILE=~/assertion_result.txt
           if [[ -f "$RESULT_FILE" ]]; then
             RESULT=$(cat "$RESULT_FILE")
@@ -60,7 +60,7 @@ jobs:
             exit 1
           fi
 
-      - name: Upload metrics
+      - name: Upload simulation metrics
         uses: actions/upload-artifact@v4
         with:
           name: ros_metrics
@@ -71,6 +71,36 @@ jobs:
         with:
           name: assertion_result
           path: ~/assertion_result.txt
+
+      - name: Upload simulation log
+        uses: actions/upload-artifact@v4
+        with:
+          name: simulation_log
+          path: ~/simulation_log.csv
+
+      - name: Install plotting tools
+        run: pip3 install matplotlib pandas
+
+      - name: Generate CPU/Memory plots
+        run: |
+          python3 plot_metrics.py
+
+      - name: Upload plots
+        uses: actions/upload-artifact@v4
+        with:
+          name: metrics_plots
+          path: |
+            cpu_usage.png
+            memory_usage.png
+      - name: Run Evaluation Summary
+        run: python3 summarize_simulations.py
+
+      - name: Upload Evaluation Summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: evaluation_summary
+          path: evaluation_summary.txt
+
 
   docker:
     needs: simulate

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+from datetime import datetime
 import rclpy
 from rclpy.node import Node
 import psutil
@@ -55,6 +55,11 @@ class MetricsCollector(Node):
         self.get_logger().info(f"[Assertion Result] {result}")
         rclpy.shutdown()
         sys.exit(0 if result == "PASS" else 1)
+        timestamp = datetime.now().isoformat()
+        scenario = os.getenv("SCENARIO", "unknown")
+        log_file = os.path.expanduser("~/simulation_log.csv")
+        with open(log_file, 'a') as f:
+            f.write(f"{timestamp},{scenario},{result}\n")
 
 def main(args=None):
     rclpy.init(args=args)

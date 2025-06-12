@@ -8,14 +8,18 @@ Viewpoint {
 }
 TexturedBackground {}
 TexturedBackgroundLight {}
+
+# Robot
 Robot {
   translation 0 0 0
   rotation 0 1 0 0
   controller "void"
 }
+
+# Obstacle
 Solid {
-  translation 0.5 0.5 0
-  children [ ]
-  boundingObject Box { size 0.1 0.1 0.1 }
-  physics Physics { }
+  translation 0.5 0.2 0
+  children []
+  boundingObject Box { size 0.2 0.2 0.2 }
+  physics Physics {}
 }
