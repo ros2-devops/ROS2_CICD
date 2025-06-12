@@ -78,8 +78,10 @@ jobs:
           name: simulation_log
           path: ~/simulation_log.csv
 
-      - name: Install plotting tools
-        run: pip3 install matplotlib pandas
+      - name: Install plotting tools (compatible versions)
+        run: |
+          pip3 install 'numpy<2.0' matplotlib pandas
+
 
       - name: Generate CPU/Memory plots
         run: |
