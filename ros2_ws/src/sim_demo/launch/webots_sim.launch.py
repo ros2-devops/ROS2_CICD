@@ -1,33 +1,39 @@
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
+from launch.actions import DeclareLaunchArgument, ExecuteProcess
 from launch.substitutions import LaunchConfiguration
-from launch_ros.actions import Node
+import os
 
 def generate_launch_description():
+    scenario = LaunchConfiguration('scenario')
     duration = LaunchConfiguration('duration')
     log_interval = LaunchConfiguration('log_interval')
 
+    world_path = [os.path.join(
+        os.getenv('HOME'),
+        'ros2_ws', 'src', 'sim_demo', 'worlds'
+    ), '/', scenario, '.wbt']
+
     return LaunchDescription([
+        DeclareLaunchArgument('scenario', default_value='demo1'),
         DeclareLaunchArgument('duration', default_value='10'),
         DeclareLaunchArgument('log_interval', default_value='1.0'),
 
-        Node(
-            package='ros2_observability',
-            executable='metrics_collector',
-            name='metrics_node',
-            output='screen',
-            parameters=[{
-                'duration': duration,
-                'log_interval': log_interval
-            }],
-            # these will become environment variables if needed:
-            additional_env={'SIM_DURATION': duration, 'LOG_INTERVAL': log_interval}
+        ExecuteProcess(
+            cmd=[
+                'webots', '--stdout', '--batch',
+                ''.join(world_path)
+            ],
+            additional_env={
+                'SIM_DURATION': duration,
+                'LOG_INTERVAL': log_interval
+            },
+            shell=True
         ),
 
-        Node(
-            package='sim_demo',
-            executable='simulator_node',
-            name='sim_demo',
+        # Start metrics node
+        ExecuteProcess(
+            cmd=['ros2', 'run', 'ros2_observability', 'metrics_collector'],
+            shell=True,
             output='screen'
-        ),
+        )
     ])

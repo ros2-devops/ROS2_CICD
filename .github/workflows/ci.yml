@@ -17,7 +17,6 @@ jobs:
         uses: ros-tooling/setup-ros@v0.7
         with:
           required-ros-distributions: humble
-          skip-apt-upgrade: true
 
       - name: Install dependencies
         run: |
@@ -42,7 +41,7 @@ jobs:
           source /opt/ros/humble/setup.bash
           source ros2_ws/install/setup.bash
           echo "[CI] Launching simulation..."
-          timeout 20 ros2 launch sim_demo webots_sim.launch.py duration:=10 log_interval:=1.0 || [[ $? == 124 ]]
+          timeout 20 ros2 launch sim_demo webots_sim.launch.py duration:=10 log_interval:=1.0 scenario:=demo1 || [[ $? == 124 ]]
           echo "[CI] Simulation complete"
           # Check if assertion_result.txt exists and read it
           RESULT_FILE=~/assertion_result.txt
