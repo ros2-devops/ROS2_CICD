@@ -96,6 +96,25 @@ jobs:
 
       - name: Run Evaluation Summary
         run: python3 summarize_simulations.py
+            
+      - name: Run AI anomaly flagging
+        run: |
+          python3 flag_anomalies.py
+
+      - name: Prepare cloud folder
+        run: |
+          mkdir -p cloud
+          cp ros_metrics.csv cloud/
+          cp cloud_metrics.csv cloud/
+          cp assertion_result.txt cloud/
+          cp anomaly_result.txt cloud/
+
+      - name: Upload cloud bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: cloud_bundle
+          path: cloud/
+
 
       - name: Upload Evaluation Summary
         uses: actions/upload-artifact@v4

@@ -52,6 +52,13 @@ class MetricsCollector(Node):
         elapsed = time.time() - self.start_time
         cpu     = psutil.cpu_percent()
         mem     = psutil.virtual_memory().percent
+        cloud_metrics_path = os.path.join(os.getcwd(), "cloud_metrics.csv")
+        timestamp = datetime.now().isoformat()
+        scenario = os.getenv("SCENARIO", "unknown")
+
+        with open(cloud_metrics_path, 'a', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow([timestamp, scenario, cpu, mem])
 
         self.cpu_log.append(cpu)
         self.mem_log.append(mem)
