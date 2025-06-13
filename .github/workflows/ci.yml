@@ -46,7 +46,7 @@ jobs:
           echo "[CI] Launching simulation..."
           timeout 20 ros2 launch sim_demo webots_sim.launch.py duration:=10 log_interval:=1.0 scenario:=demo1 || [[ $? == 124 ]]
           echo "[CI] Simulation complete"
-          RESULT_FILE=~/assertion_result.txt
+          RESULT_FILE=assertion_result.txt
           if [[ -f "$RESULT_FILE" ]]; then
             RESULT=$(cat "$RESULT_FILE")
             echo "Assertion Result: $RESULT"
@@ -93,6 +93,7 @@ jobs:
           path: |
             cpu_usage.png
             memory_usage.png
+
       - name: Run Evaluation Summary
         run: python3 summarize_simulations.py
 
@@ -101,7 +102,6 @@ jobs:
         with:
           name: evaluation_summary
           path: evaluation_summary.txt
-
 
   docker:
     needs: simulate
