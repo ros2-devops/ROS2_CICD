@@ -96,7 +96,10 @@ jobs:
 
       - name: Run Evaluation Summary
         run: python3 summarize_simulations.py
-            
+        
+      - name: Install ML libraries
+        run: pip3 install scikit-learn pandas matplotlib
+
       - name: Run AI anomaly flagging
         run: |
           python3 flag_anomalies.py
