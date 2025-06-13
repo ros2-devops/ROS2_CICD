@@ -1,37 +1,55 @@
+#!/usr/bin/env python3
+"""
+Summarise simulation results
+‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+• Reads simulation_log.csv to count PASS / FAIL runs
+• Reads ros_metrics.csv from the *current* run
+• Writes evaluation_summary.txt in the same directory
+"""
+
+import os
+import sys
 import pandas as pd
 from datetime import datetime
 
-# Load simulation log
-log_path = 'simulation_log.csv'
-try:
-    log_df = pd.read_csv(log_path, header=None, names=['timestamp', 'scenario', 'result'])
-except Exception as e:
-    print(f"Failed to read log: {e}")
-    exit(1)
+WORK_DIR = os.getcwd()
+log_path      = os.path.join(WORK_DIR, "simulation_log.csv")
+metrics_path  = os.path.join(WORK_DIR, "ros_metrics.csv")
+summary_path  = os.path.join(WORK_DIR, "evaluation_summary.txt")
 
-# Count total runs and result breakdown
+# ── verify files exist ─────────────────────────────────
+if not os.path.exists(log_path):
+    print(f"{log_path} not found – has MetricsCollector appended a row?")
+    sys.exit(1)
+
+if not os.path.exists(metrics_path):
+    print(f"{metrics_path} not found – did the simulation create ros_metrics.csv?")
+    sys.exit(1)
+
+# ── load data ─────────────────────────────────────────
+log_df = pd.read_csv(log_path, header=None,
+                     names=["timestamp", "scenario", "result"])
+metrics_df = pd.read_csv(metrics_path, header=None,
+                         names=["Time", "CPU", "Memory"])
+
+# ── compute statistics ───────────────────────────────
 total_runs = len(log_df)
-pass_count = (log_df['result'] == 'PASS').sum()
-fail_count = (log_df['result'] == 'FAIL').sum()
+pass_count = (log_df["result"] == "PASS").sum()
+fail_count = total_runs - pass_count
+avg_cpu    = metrics_df["CPU"].mean()
+avg_mem    = metrics_df["Memory"].mean()
 
-# Load last metrics
-metrics_path = '/home/runner/ros_metrics.csv'
-df = pd.read_csv(metrics_path, header=None, names=['Time', 'CPU', 'Memory'])
-avg_cpu = df['CPU'].mean()
-avg_mem = df['Memory'].mean()
+# ── write summary ─────────────────────────────────────
+with open(summary_path, "w") as f:
+    f.write("Simulation Evaluation Summary\n")
+    f.write(f"Generated: {datetime.now().isoformat()}\n\n")
+    f.write(f"Runs recorded in log: {total_runs}\n")
+    f.write(f"   PASS: {pass_count}\n")
+    f.write(f"   FAIL: {fail_count}\n\n")
+    f.write(f"Current-run averages:\n")
+    f.write(f"   CPU   : {avg_cpu:.2f} %\n")
+    f.write(f"   Memory: {avg_mem:.2f} %\n")
+    f.write("\nStability: "
+            "Stable\n" if fail_count == 0 else "Unstable (failures detected)\n")
 
-# Save summary
-summary_path = 'evaluation_summary.txt'
-with open(summary_path, 'w') as f:
-    f.write(f"Simulation Evaluation Summary\n")
-    f.write(f"Date: {datetime.now().isoformat()}\n")
-    f.write(f"Total Runs: {total_runs}\n")
-    f.write(f"Pass: {pass_count}, Fail: {fail_count}\n")
-    f.write(f"Average CPU: {avg_cpu:.2f}%\n")
-    f.write(f"Average Memory: {avg_mem:.2f}%\n")
-    if fail_count > 0:
-        f.write("Stability:  Unstable (Failures Detected)\n")
-    else:
-        f.write("Stability:  Stable\n")
-
-print(" Evaluation summary generated.")
+print("evaluation_summary.txt generated.")
