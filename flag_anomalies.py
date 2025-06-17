@@ -17,8 +17,8 @@ if not os.path.exists(ros_metrics_path):
 df = pd.read_csv(ros_metrics_path, header=None, names=["Time", "CPU", "Memory"])
 
 # Preprocess: normalize CPU only (match training)
-df["CPU_norm"] = df["CPU"] / df["CPU"].max()
-X = df[["CPU_norm"]]
+df["cpu_norm"] = df["CPU"] / df["CPU"].max()
+X = df[["cpu_norm"]]
 
 # Load model
 if not os.path.exists(model_path):
