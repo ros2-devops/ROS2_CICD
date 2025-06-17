@@ -3,6 +3,7 @@ import os
 import pandas as pd
 import joblib
 import matplotlib.pyplot as plt
+import numpy as np
 
 # Paths
 ros_metrics_path = "ros_metrics.csv"
@@ -43,14 +44,21 @@ with open(result_path, "w") as f:
 
 print("anomaly_result.txt written")
 
-# Sanitize Time column for plotting
-df["Time"] = pd.to_numeric(df["Time"], errors="coerce")
-df = df.dropna(subset=["Time", "CPU"])
 
-# Plot anomalies
+
+#  Ensure time is numeric
+df["Time"] = pd.to_numeric(df["Time"], errors="coerce")
+df = df.dropna(subset=["Time", "CPU", "anomaly"])
+
+# Convert to numpy explicitly (prevents Series indexing issues)
+times = df["Time"].to_numpy()
+cpu = df["CPU"].to_numpy()
+anomalies = df["anomaly"].to_numpy()
+
+#  Plot
 plt.figure()
-plt.plot(df["Time"], df["CPU"], label="CPU %", alpha=0.7)
-plt.scatter(df["Time"][df["anomaly"] == -1], df["CPU"][df["anomaly"] == -1],
+plt.plot(times, cpu, label="CPU %", alpha=0.7)
+plt.scatter(times[anomalies == -1], cpu[anomalies == -1],
             color="red", label="Anomaly", zorder=5)
 plt.xlabel("Time (s)")
 plt.ylabel("CPU Usage (%)")
@@ -58,4 +66,4 @@ plt.title("CPU Anomalies Over Time")
 plt.legend()
 plt.tight_layout()
 plt.savefig("anomaly_plot.png")
-print("anomaly_plot.png saved")
+print(" anomaly_plot.png saved")
