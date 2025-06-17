@@ -43,7 +43,11 @@ with open(result_path, "w") as f:
 
 print("anomaly_result.txt written")
 
-# Optional: Plot
+# Sanitize Time column for plotting
+df["Time"] = pd.to_numeric(df["Time"], errors="coerce")
+df = df.dropna(subset=["Time", "CPU"])
+
+# Plot anomalies
 plt.figure()
 plt.plot(df["Time"], df["CPU"], label="CPU %", alpha=0.7)
 plt.scatter(df["Time"][df["anomaly"] == -1], df["CPU"][df["anomaly"] == -1],
