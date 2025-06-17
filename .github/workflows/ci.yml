@@ -33,7 +33,8 @@ jobs:
 
           sudo snap install webots --classic
 
-          pip3 install pandas scikit-learn joblib
+          pip3 install "numpy<2.0" pandas scikit-learn joblib
+
 
 
       - name: Build workspace
