@@ -29,9 +29,12 @@ jobs:
             ros-humble-ros-base \
             ros-humble-vision-msgs \
             ros-humble-ament-cmake \
-            webots \
             python3-matplotlib || sudo apt -f install -y
-          pip3 install --break-system-packages pandas scikit-learn joblib
+
+          sudo snap install webots --classic
+
+          pip3 install pandas scikit-learn joblib
+
 
       - name: Build workspace
         run: |
