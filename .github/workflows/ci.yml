@@ -29,7 +29,9 @@ jobs:
             ros-humble-ros-base \
             ros-humble-vision-msgs \
             ros-humble-ament-cmake \
-            webots || sudo apt -f install -y
+            webots \
+            python3-matplotlib || sudo apt -f install -y
+          pip3 install --break-system-packages pandas scikit-learn joblib
 
       - name: Build workspace
         run: |
@@ -78,46 +80,21 @@ jobs:
           name: simulation_log
           path: simulation_log.csv
 
-      - name: Install plotting tools (compatible versions)
+      - name: Copy pre-trained AI model
         run: |
-          pip3 install 'numpy<2.0' matplotlib pandas
+          cp anomaly_model.pkl .
 
-      - name: Generate CPU/Memory plots
-        run: |
-          python3 plot_metrics.py
-
-      - name: Upload plots
-        uses: actions/upload-artifact@v4
-        with:
-          name: metrics_plots
-          path: |
-            cpu_usage.png
-            memory_usage.png
-
-      - name: Run Evaluation Summary
-        run: python3 summarize_simulations.py
-        
-      - name: Install ML libraries
-        run: pip3 install scikit-learn pandas matplotlib
-
-      - name: Run AI anomaly flagging
+      - name: Run AI anomaly detection
         run: |
           python3 flag_anomalies.py
 
-      - name: Prepare cloud folder
-        run: |
-          mkdir -p cloud
-          cp ros_metrics.csv cloud/
-          cp cloud_metrics.csv cloud/
-          cp assertion_result.txt cloud/
-          cp anomaly_result.txt cloud/
-
-      - name: Upload cloud bundle
+      - name: Upload anomaly results
         uses: actions/upload-artifact@v4
         with:
-          name: cloud_bundle
-          path: cloud/
-
+          name: ai_anomaly_result
+          path: |
+            anomaly_result.txt
+            anomaly_plot.png
 
       - name: Upload Evaluation Summary
         uses: actions/upload-artifact@v4

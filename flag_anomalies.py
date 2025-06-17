@@ -1,42 +1,57 @@
-#!/usr/bin/env python3
-"""
-ML-based Anomaly Detection for ROS 2 Metrics
-‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-Uses Isolation Forest to detect anomalous CPU / memory readings.
-"""
-
+# flag_anomalies.py
 import os
 import pandas as pd
-import numpy as np
-from sklearn.ensemble import IsolationForest
+import joblib
+import matplotlib.pyplot as plt
 
-INPUT = os.path.join(os.getcwd(), "ros_metrics.csv")
-OUTPUT = os.path.join(os.getcwd(), "anomaly_result.txt")
+# Paths
+ros_metrics_path = "ros_metrics.csv"
+model_path = "anomaly_model.pkl"
+result_path = "anomaly_result.txt"
 
-if not os.path.exists(INPUT):
+# Load runtime metrics
+if not os.path.exists(ros_metrics_path):
     print("ros_metrics.csv not found")
     exit(1)
 
-# ── Load and prepare data ─────────────────────────────
-df = pd.read_csv(INPUT, header=None, names=["Time", "CPU", "Memory"])
-X = df[["CPU", "Memory"]]
+df = pd.read_csv(ros_metrics_path, header=None, names=["Time", "CPU", "Memory"])
 
-# ── Train isolation forest ────────────────────────────
-model = IsolationForest(n_estimators=100, contamination=0.1, random_state=42)
-model.fit(X)
+# Preprocess: normalize CPU only (match training)
+df["CPU_norm"] = df["CPU"] / df["CPU"].max()
+X = df[["CPU_norm"]]
 
-# ── Predict anomalies ─────────────────────────────────
-df["anomaly"] = model.predict(X)  # -1 = anomaly, 1 = normal
-anomaly_rows = df[df["anomaly"] == -1]
+# Load model
+if not os.path.exists(model_path):
+    print("Trained model not found (anomaly_model.pkl)")
+    exit(1)
 
-# ── Write result ──────────────────────────────────────
-with open(OUTPUT, "w") as f:
-    if not anomaly_rows.empty:
-        f.write("ANOMALY DETECTED\n")
-        f.write(f"{len(anomaly_rows)} anomaly points detected\n")
-        f.write("Sample rows:\n")
-        f.write(anomaly_rows.head(5).to_string(index=False))
+model = joblib.load(model_path)
+
+# Predict: -1 = anomaly, 1 = normal
+df["anomaly"] = model.predict(X)
+
+# Count anomalies
+num_anomalies = (df["anomaly"] == -1).sum()
+
+# Write result file
+with open(result_path, "w") as f:
+    if num_anomalies > 0:
+        f.write(f"ANOMALY DETECTED\n")
+        f.write(f"Count: {num_anomalies} rows\n")
     else:
         f.write("NO ANOMALY\n")
 
-print("ML-based anomaly_result.txt written.")
+print("anomaly_result.txt written")
+
+# Optional: Plot
+plt.figure()
+plt.plot(df["Time"], df["CPU"], label="CPU %", alpha=0.7)
+plt.scatter(df["Time"][df["anomaly"] == -1], df["CPU"][df["anomaly"] == -1],
+            color="red", label="Anomaly", zorder=5)
+plt.xlabel("Time (s)")
+plt.ylabel("CPU Usage (%)")
+plt.title("CPU Anomalies Over Time")
+plt.legend()
+plt.tight_layout()
+plt.savefig("anomaly_plot.png")
+print("anomaly_plot.png saved")
