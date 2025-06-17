@@ -83,10 +83,6 @@ jobs:
           name: simulation_log
           path: simulation_log.csv
 
-      - name: Copy pre-trained AI model
-        run: |
-          cp anomaly_model.pkl .
-
       - name: Run AI anomaly detection
         run: |
           python3 flag_anomalies.py
