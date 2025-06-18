@@ -10,6 +10,9 @@ jobs:
     runs-on: ubuntu-22.04
     outputs:
       result: ${{ steps.run_sim.outputs.result }}
+    strategy:
+      matrix:
+        scenario: [demo1, demo2]
 
     steps:
       - name: Checkout repository
@@ -50,7 +53,8 @@ jobs:
           source ros2_ws/install/setup.bash
           export SCENARIO=demo1
           echo "[CI] Launching simulation..."
-          timeout 20 ros2 launch sim_demo webots_sim.launch.py duration:=10 log_interval:=1.0 scenario:=demo1 || [[ $? == 124 ]]
+          export SCENARIO=${{ matrix.scenario }}
+          ros2 launch sim_demo webots_sim.launch.py duration:=60 log_interval:=1.0 scenario:=$SCENARIO || [[ $? == 124 ]]
           echo "[CI] Simulation complete"
           RESULT_FILE=assertion_result.txt
           if [[ -f "$RESULT_FILE" ]]; then
@@ -96,11 +100,15 @@ jobs:
             anomaly_result.txt
             anomaly_plot.png
 
+      - name: Generate Evaluation Summary
+        run: python3 summarize_simulations.py
+
       - name: Upload Evaluation Summary
         uses: actions/upload-artifact@v4
         with:
-          name: evaluation_summary
+          name: evaluation_summary_${{ matrix.scenario }}
           path: evaluation_summary.txt
+
 
   docker:
     needs: simulate
