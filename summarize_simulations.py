@@ -49,7 +49,7 @@ with open(summary_path, "w") as f:
     f.write(f"Current-run averages:\n")
     f.write(f"   CPU   : {avg_cpu:.2f} %\n")
     f.write(f"   Memory: {avg_mem:.2f} %\n")
-    f.write("\nStability: "
-            "Stable\n" if fail_count == 0 else "Unstable (failures detected)\n")
+    f.write("\nStability: " + ("Stable\n" if fail_count == 0 else "Unstable (failures detected)\n"))
+
 
 print("evaluation_summary.txt generated.")
