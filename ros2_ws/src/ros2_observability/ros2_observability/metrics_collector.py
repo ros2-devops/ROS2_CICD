@@ -26,9 +26,11 @@ class MetricsCollector(Node):
         super().__init__('metrics_node')
 
         # ---------- file locations ----------
-        self.metrics_file = os.path.join(WORK_DIR, 'ros_metrics.csv')
-        self.result_file  = os.path.join(WORK_DIR, 'assertion_result.txt')
-        self.log_file     = os.path.join(WORK_DIR, 'simulation_log.csv')
+        self.metrics_file = os.path.join(WORK_DIR, f'ros_metrics_{self.scenario}.csv')
+        self.result_file  = os.path.join(WORK_DIR, f'assertion_result_{self.scenario}.txt')
+        self.log_file     = os.path.join(WORK_DIR, f'simulation_log_{self.scenario}.csv')
+
+        
 
         # ---------- settings ----------
         self.timer_period  = float(os.getenv('LOG_INTERVAL', 1.0))
