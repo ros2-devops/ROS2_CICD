@@ -51,7 +51,6 @@ jobs:
         run: |
           source /opt/ros/humble/setup.bash
           source ros2_ws/install/setup.bash
-          export SCENARIO=demo1
           echo "[CI] Launching simulation..."
           export SCENARIO=${{ matrix.scenario }}
           timeout 3m ros2 launch sim_demo webots_sim.launch.py duration:=3m log_interval:=1.0 scenario:=$SCENARIO || [[ $? == 124 ]]
@@ -90,13 +89,8 @@ jobs:
 
       - name: Run AI anomaly detection
         run: |
+          export SCENARIO=${{ matrix.scenario }}
           python3 flag_anomalies.py
-
-      - name: Upload structured AI log
-        uses: actions/upload-artifact@v4
-        with:
-          name: structured_anomaly_log
-          path: anomaly_result_log.csv
 
       - name: Upload anomaly results
         uses: actions/upload-artifact@v4
