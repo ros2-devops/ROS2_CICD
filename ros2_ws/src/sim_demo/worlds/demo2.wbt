@@ -1,25 +1,55 @@
 #VRML_SIM R2023b utf8
+
+EXTERNPROTO "webots://projects/robots/robotis/turtlebot/protos/TurtleBot3Burger.proto"
+EXTERNPROTO "webots://projects/objects/factory/containers/protos/WoodenBox.proto"
+EXTERNPROTO "webots://projects/objects/floors/protos/RectangleArena.proto"
+
 WorldInfo {
   basicTimeStep 32
 }
+
 Viewpoint {
   orientation -0.4 0.91 0.1 2.5
-  position 1 1 2
+  position 2 2 2
 }
-TexturedBackground {}
-TexturedBackgroundLight {}
 
-# Robot
-Robot {
+RectangleArena {
   translation 0 0 0
-  rotation 0 1 0 0
+  size 4 4
+}
+
+TurtleBot3Burger {
+  translation -1 0.5 0.05
+  name "bot1"
   controller "void"
 }
 
-# Obstacle
-Solid {
-  translation 0.5 0.2 0
-  children []
-  boundingObject Box { size 0.2 0.2 0.2 }
-  physics Physics {}
+TurtleBot3Burger {
+  translation 1 -0.5 0.05
+  name "bot2"
+  controller "cpu_hog_controller"
+  children [
+    Camera {
+      name "high_res_camera"
+      width 1280
+      height 720
+      fieldOfView 1.57
+      near 0.01
+    }
+  ]
+}
+
+WoodenBox {
+  translation 0 1.2 0.1
+  size 0.3 0.3 0.3
+}
+
+WoodenBox {
+  translation -1.2 -1.2 0.1
+  size 0.5 0.5 0.2
+}
+
+WoodenBox {
+  translation 1.2 0 0.1
+  size 0.2 0.6 0.4
 }
