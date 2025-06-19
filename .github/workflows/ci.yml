@@ -121,8 +121,8 @@ jobs:
       - name: Upload evaluation log
         uses: actions/upload-artifact@v4
         with:
-          name: evaluation_log
-          path: evaluation_log.csv
+          name: evaluation_log_${{ matrix.scenario }}
+          path: evaluation_log_${{ matrix.scenario }}.csv
 
 
   docker:

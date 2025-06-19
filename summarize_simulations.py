@@ -16,9 +16,9 @@ scenario = os.getenv("SCENARIO", "unknown")
 # Paths
 log_path = f"simulation_log_{scenario}.csv"
 metrics_path     = f"ros_metrics_{scenario}.csv"
-anomaly_log_path = "anomaly_result_log.csv"
+anomaly_log_path = f"anomaly_result_log_{scenario}.csv"
 summary_path     = f"evaluation_summary_{scenario}.txt"
-eval_log_path    = "evaluation_log.csv"
+eval_log_path    = f"evaluation_log_{scenario}.csv"
 
 # Verify files
 if not os.path.exists(log_path):
