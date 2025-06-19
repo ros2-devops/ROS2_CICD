@@ -92,6 +92,12 @@ jobs:
         run: |
           python3 flag_anomalies.py
 
+      - name: Upload structured AI log
+        uses: actions/upload-artifact@v4
+        with:
+          name: structured_anomaly_log
+          path: anomaly_result_log.csv
+
       - name: Upload anomaly results
         uses: actions/upload-artifact@v4
         with:
