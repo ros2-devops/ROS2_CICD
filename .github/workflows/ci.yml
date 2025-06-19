@@ -103,8 +103,8 @@ jobs:
       - name: Upload anomaly result log
         uses: actions/upload-artifact@v4
         with:
-          name: anomaly_result_log
-          path: anomaly_result_log.csv
+          name: anomaly_result_log_${{ matrix.scenario }}
+          path: anomaly_result_log_${{ matrix.scenario }}.csv
 
 
       - name: Generate Evaluation Summary

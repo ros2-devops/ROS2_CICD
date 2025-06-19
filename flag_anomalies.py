@@ -23,7 +23,7 @@ ros_metrics_path = f"ros_metrics_{scenario}.csv"
 model_path = "anomaly_model.pkl"
 result_path = f"anomaly_result_{scenario}.txt"
 plot_path = f"anomaly_plot_{scenario}.png"
-log_path = "anomaly_result_log.csv"
+log_path = f"anomaly_result_log_{scenario}.csv"
 
 # Load runtime metrics
 if not os.path.exists(ros_metrics_path):
