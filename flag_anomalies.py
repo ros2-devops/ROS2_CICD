@@ -65,11 +65,24 @@ plt.ylabel("CPU Usage (%)")
 plt.title("CPU Anomalies Over Time")
 plt.legend()
 plt.tight_layout()
-plt.savefig("anomaly_plot.png")
-print(" anomaly_plot.png saved")
+# Save plot
+plt.savefig(f"anomaly_plot_{scenario}.png")
+print(f"anomaly_plot_{scenario}.png saved")
 
-# Append to anomaly result log
-with open("anomaly_result_log.csv", "a") as log:
-    if os.stat("anomaly_result_log.csv").st_size == 0:
-        log.write("Timestamp,Scenario,AnomalyScore\n")
-    log.write(f"{timestamp},{scenario},{anomaly_score}\n")
+# Scenario and timestamp for structured log
+from datetime import datetime
+timestamp = datetime.now().isoformat()
+scenario = os.getenv("SCENARIO", "unknown")
+log_file = f"anomaly_log_{scenario}.csv"
+
+# Structured logging per anomaly row
+df["Timestamp"] = timestamp
+df["Scenario"] = scenario
+df["AnomalyScore"] = (df["anomaly"] == -1).astype(int)
+
+# Create/append structured log
+header = not os.path.exists(log_file)
+df[["Timestamp", "Scenario", "CPU", "Memory", "AnomalyScore"]].to_csv(
+    log_file, mode='a', header=header, index=False
+)
+print(f"Structured anomaly log written to: {log_file}")

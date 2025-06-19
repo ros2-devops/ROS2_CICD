@@ -25,10 +25,11 @@ class MetricsCollector(Node):
     def __init__(self):
         super().__init__('metrics_node')
 
+        scenario = os.getenv("SCENARIO", "unknown")
         # ---------- file locations ----------
-        self.metrics_file = os.path.join(WORK_DIR, f'ros_metrics_{self.scenario}.csv')
-        self.result_file  = os.path.join(WORK_DIR, f'assertion_result_{self.scenario}.txt')
-        self.log_file     = os.path.join(WORK_DIR, f'simulation_log_{self.scenario}.csv')
+        self.metrics_file = os.path.join(WORK_DIR, f'ros_metrics_{scenario}.csv')
+        self.result_file  = os.path.join(WORK_DIR, f'assertion_result_{scenario}.txt')
+        self.log_file     = os.path.join(WORK_DIR, f'simulation_log_{scenario}.csv')
 
         
 
