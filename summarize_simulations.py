@@ -14,7 +14,7 @@ from datetime import datetime
 scenario = os.getenv("SCENARIO", "unknown")
 
 # Paths
-log_path         = "simulation_log.csv"
+log_path = f"simulation_log_{scenario}.csv"
 metrics_path     = f"ros_metrics_{scenario}.csv"
 anomaly_log_path = "anomaly_result_log.csv"
 summary_path     = f"evaluation_summary_{scenario}.txt"
