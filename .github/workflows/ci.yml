@@ -73,7 +73,7 @@ jobs:
       - name: Upload simulation metrics
         uses: actions/upload-artifact@v4
         with:
-          name: ros_metrics
+          name: ros_metrics_${{ matrix.scenario }}
           path: ros_metrics.csv
 
       - name: Upload assertion result
@@ -85,7 +85,7 @@ jobs:
       - name: Upload simulation log
         uses: actions/upload-artifact@v4
         with:
-          name: simulation_log
+          name: simulation_log_${{ matrix.scenario }}
           path: simulation_log.csv
 
       - name: Run AI anomaly detection
@@ -95,7 +95,7 @@ jobs:
       - name: Upload anomaly results
         uses: actions/upload-artifact@v4
         with:
-          name: ai_anomaly_result
+          name: ai_anomaly_result_${{ matrix.scenario }}
           path: |
             anomaly_result.txt
             anomaly_plot.png
