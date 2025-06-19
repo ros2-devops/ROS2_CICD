@@ -108,7 +108,9 @@ jobs:
 
 
       - name: Generate Evaluation Summary
-        run: python3 summarize_simulations.py
+        run: |
+          export SCENARIO=${{ matrix.scenario }}
+          python3 summarize_simulations.py
 
       - name: Upload Evaluation Summary
         uses: actions/upload-artifact@v4
