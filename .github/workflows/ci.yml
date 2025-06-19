@@ -54,7 +54,7 @@ jobs:
           export SCENARIO=demo1
           echo "[CI] Launching simulation..."
           export SCENARIO=${{ matrix.scenario }}
-          timeout 3m ros2 launch sim_demo webots_sim.launch.py duration:=60 log_interval:=1.0 scenario:=$SCENARIO || [[ $? == 124 ]]
+          timeout 3m ros2 launch sim_demo webots_sim.launch.py duration:=3m log_interval:=1.0 scenario:=$SCENARIO || [[ $? == 124 ]]
           echo "[CI] Simulation complete"
           RESULT_FILE=assertion_result_${{ matrix.scenario }}.txt
           if [[ -f "$RESULT_FILE" ]]; then
@@ -74,19 +74,19 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ros_metrics_${{ matrix.scenario }}
-          path: ros_metrics.csv
+          path: ros_metrics_${{ matrix.scenario }}.csv
 
       - name: Upload assertion result
         uses: actions/upload-artifact@v4
         with:
           name: assertion_result_${{ matrix.scenario }}
-          path: assertion_result.txt
+          path: assertion_result_${{ matrix.scenario }}.txt
 
       - name: Upload simulation log
         uses: actions/upload-artifact@v4
         with:
           name: simulation_log_${{ matrix.scenario }}
-          path: simulation_log.csv
+          path: simulation_log_${{ matrix.scenario }}.csv
 
       - name: Run AI anomaly detection
         run: |
@@ -97,8 +97,15 @@ jobs:
         with:
           name: ai_anomaly_result_${{ matrix.scenario }}
           path: |
-            anomaly_result.txt
-            anomaly_plot.png
+            anomaly_result_${{ matrix.scenario }}.txt
+            anomaly_plot_${{ matrix.scenario }}.png
+
+      - name: Upload anomaly result log
+        uses: actions/upload-artifact@v4
+        with:
+          name: anomaly_result_log
+          path: anomaly_result_log.csv
+
 
       - name: Generate Evaluation Summary
         run: python3 summarize_simulations.py
@@ -107,7 +114,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: evaluation_summary_${{ matrix.scenario }}
-          path: evaluation_summary.txt
+          path: evaluation_summary_${{ matrix.scenario }}.txt
+
+      - name: Upload evaluation log
+        uses: actions/upload-artifact@v4
+        with:
+          name: evaluation_log
+          path: evaluation_log.csv
 
 
   docker:

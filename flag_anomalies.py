@@ -67,3 +67,9 @@ plt.legend()
 plt.tight_layout()
 plt.savefig("anomaly_plot.png")
 print(" anomaly_plot.png saved")
+
+# Append to anomaly result log
+with open("anomaly_result_log.csv", "a") as log:
+    if os.stat("anomaly_result_log.csv").st_size == 0:
+        log.write("Timestamp,Scenario,AnomalyScore\n")
+    log.write(f"{timestamp},{scenario},{anomaly_score}\n")

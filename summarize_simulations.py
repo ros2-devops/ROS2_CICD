@@ -51,5 +51,13 @@ with open(summary_path, "w") as f:
     f.write(f"   Memory: {avg_mem:.2f} %\n")
     f.write("\nStability: " + ("Stable\n" if fail_count == 0 else "Unstable (failures detected)\n"))
 
-
 print("evaluation_summary.txt generated.")
+
+# Append to evaluation log
+timestamp = datetime.now().isoformat()
+with open("evaluation_log.csv", "a") as log:
+    if os.stat("evaluation_log.csv").st_size == 0:
+        log.write("Timestamp,Scenario,Summary\n")
+    log.write(f"{timestamp},{scenario},{summary}\n")
+
+print("evaluation_log.csv appended.")
