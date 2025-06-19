@@ -56,7 +56,7 @@ jobs:
           export SCENARIO=${{ matrix.scenario }}
           timeout 3m ros2 launch sim_demo webots_sim.launch.py duration:=60 log_interval:=1.0 scenario:=$SCENARIO || [[ $? == 124 ]]
           echo "[CI] Simulation complete"
-          RESULT_FILE=assertion_result.txt
+          RESULT_FILE=assertion_result_${{ matrix.scenario }}.txt
           if [[ -f "$RESULT_FILE" ]]; then
             RESULT=$(cat "$RESULT_FILE")
             echo "Assertion Result: $RESULT"
@@ -79,7 +79,7 @@ jobs:
       - name: Upload assertion result
         uses: actions/upload-artifact@v4
         with:
-          name: assertion_result
+          name: assertion_result_${{ matrix.scenario }}
           path: assertion_result.txt
 
       - name: Upload simulation log
