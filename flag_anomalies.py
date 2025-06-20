@@ -79,10 +79,15 @@ print(f"{result_path} written")
 # ── Plot anomalies ───────────────────────────────────
 df["Time"] = pd.to_numeric(df["Time"], errors="coerce")
 df = df.dropna(subset=["Time", "CPU", "anomaly"])
+# ── Safe plotting fix ────────────────────────────────
+times = df["Time"].values
+cpu = df["CPU"].values
+anomalies = df["anomaly"].values
+anomaly_mask = anomalies == -1
+
 plt.figure()
-plt.plot(df["Time"], df["CPU"], label="CPU %", alpha=0.7)
-plt.scatter(df["Time"][df["anomaly"] == -1],
-            df["CPU"][df["anomaly"] == -1],
+plt.plot(times, cpu, label="CPU %", alpha=0.7)
+plt.scatter(times[anomaly_mask], cpu[anomaly_mask],
             color="red", label="Anomaly", zorder=5)
 plt.xlabel("Time (s)")
 plt.ylabel("CPU Usage (%)")
@@ -91,6 +96,7 @@ plt.legend()
 plt.tight_layout()
 plt.savefig(plot_path)
 print(f"{plot_path} saved")
+
 
 # ── Append structured log ───────────────
 timestamp = datetime.now().isoformat()
