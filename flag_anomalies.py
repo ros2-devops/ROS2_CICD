@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 """
 AI-Powered Anomaly Detection and Action Logger
-‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-• Loads per-scenario ros_metrics_*.csv
-• Applies pretrained model to detect anomalies
-• Logs structured result with timestamp, scenario, type, and AI action
-• Saves annotated CPU anomaly plot per scenario
+• Detects anomalies from ros_metrics_<scenario>.csv
+• Applies pretrained model (Isolation Forest)
+• Logs structured summary with timestamp, scenario, type, and action
 """
 
 import os
@@ -15,61 +13,59 @@ import matplotlib.pyplot as plt
 import numpy as np
 from datetime import datetime
 
-# Scenario (passed from environment)
+# ── Setup ──────────────────────────────
 scenario = os.getenv("SCENARIO", "unknown")
 
-# Paths
 ros_metrics_path = f"ros_metrics_{scenario}.csv"
 model_path = "anomaly_model.pkl"
 result_path = f"anomaly_result_{scenario}.txt"
 plot_path = f"anomaly_plot_{scenario}.png"
 log_path = f"anomaly_result_log_{scenario}.csv"
 
-# Load runtime metrics
+# ── Validate input ─────────────────────
 if not os.path.exists(ros_metrics_path):
     print(f"{ros_metrics_path} not found")
     exit(1)
 
 df = pd.read_csv(ros_metrics_path, header=None, names=["Time", "CPU", "Memory"])
 
-# Preprocess (normalize CPU only to match training)
+# ── Preprocess ─────────────────────────
 df["cpu_norm"] = df["CPU"] / df["CPU"].max()
 X = df[["cpu_norm"]]
 
-# Load trained model
+# ── Load model ─────────────────────────
 if not os.path.exists(model_path):
     print("Trained model not found (anomaly_model.pkl)")
     exit(1)
 
 model = joblib.load(model_path)
-
-# Predict anomalies: -1 = anomaly, 1 = normal
 df["anomaly"] = model.predict(X)
-num_anomalies = (df["anomaly"] == -1).sum()
 
-# Identify rule-based anomaly types
+# ── Count anomalies ────────────────────
+num_anomalies = (df["anomaly"] == -1).sum()
 cpu_anomalies = df[df["CPU"] > 80]
 mem_anomalies = df[df["Memory"] > 75]
 
-# Decide AI action
-if not cpu_anomalies.empty and mem_anomalies.empty:
-    action = "Scale CPU allocation"
-elif not mem_anomalies.empty and cpu_anomalies.empty:
-    action = "Optimize memory usage"
-elif not cpu_anomalies.empty and not mem_anomalies.empty:
-    action = "Initiate load balancing"
+# ── Decide action only if real resource issue ───────
+if num_anomalies > 0 and (not cpu_anomalies.empty or not mem_anomalies.empty):
+    if not cpu_anomalies.empty and mem_anomalies.empty:
+        anomaly_type = "CPU"
+        action = "Scale CPU allocation"
+    elif not mem_anomalies.empty and cpu_anomalies.empty:
+        anomaly_type = "Memory"
+        action = "Optimize memory usage"
+    else:
+        anomaly_type = "Both"
+        action = "Initiate load balancing"
+    result_flag = True
 else:
+    anomaly_type = "None"
     action = "No action"
+    result_flag = False
 
-# Determine anomaly type
-anomaly_type = "CPU" if not cpu_anomalies.empty and mem_anomalies.empty else \
-               "Memory" if not mem_anomalies.empty and cpu_anomalies.empty else \
-               "Both" if not cpu_anomalies.empty and not mem_anomalies.empty else \
-               "None"
-
-# Write per-scenario result file
+# ── Write anomaly_result_<scenario>.txt ──────────────
 with open(result_path, "w") as f:
-    if num_anomalies > 0:
+    if result_flag:
         f.write("ANOMALY DETECTED\n")
         f.write(f"Count: {num_anomalies} rows\n")
         f.write(f"Type: {anomaly_type}\n")
@@ -80,16 +76,14 @@ with open(result_path, "w") as f:
 
 print(f"{result_path} written")
 
-# Plot anomalies
+# ── Plot anomalies ───────────────────────────────────
 df["Time"] = pd.to_numeric(df["Time"], errors="coerce")
 df = df.dropna(subset=["Time", "CPU", "anomaly"])
-times = df["Time"].to_numpy()
-cpu = df["CPU"].to_numpy()
-anomalies = df["anomaly"].to_numpy()
-
 plt.figure()
-plt.plot(times, cpu, label="CPU %", alpha=0.7)
-plt.scatter(times[anomalies == -1], cpu[anomalies == -1], color="red", label="Anomaly", zorder=5)
+plt.plot(df["Time"], df["CPU"], label="CPU %", alpha=0.7)
+plt.scatter(df["Time"][df["anomaly"] == -1],
+            df["CPU"][df["anomaly"] == -1],
+            color="red", label="Anomaly", zorder=5)
 plt.xlabel("Time (s)")
 plt.ylabel("CPU Usage (%)")
 plt.title(f"CPU Anomalies Over Time – {scenario}")
@@ -98,7 +92,7 @@ plt.tight_layout()
 plt.savefig(plot_path)
 print(f"{plot_path} saved")
 
-# Structured anomaly log (append mode)
+# ── Append structured log ───────────────
 timestamp = datetime.now().isoformat()
 header = "Timestamp,Scenario,AnomalyScore,AnomalyType,AI_Action\n"
 line = f"{timestamp},{scenario},{num_anomalies},{anomaly_type},{action}\n"
@@ -109,4 +103,4 @@ with open(log_path, "a") as log:
         log.write(header)
     log.write(line)
 
-print("Structured anomaly_result_log.csv updated.")
+print(f"{log_path} updated.")
