@@ -1,22 +1,26 @@
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, ExecuteProcess
-from launch.substitutions import LaunchConfiguration
-import os
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch_ros.substitutions import FindPackageShare
+from launch.substitutions import TextSubstitution
 
 def generate_launch_description():
     duration = LaunchConfiguration('duration')
     log_interval = LaunchConfiguration('log_interval')
     scenario = LaunchConfiguration('scenario')
 
-    world_path = os.path.join(
-        os.getcwd(), 'ros2_ws', 'src', 'sim_demo', 'worlds',
-        LaunchConfiguration('scenario').perform({}) + '.wbt'
-    )
+    # Dynamically construct world path using PathJoinSubstitution
+    world_path = PathJoinSubstitution([
+        FindPackageShare('sim_demo'),
+        'worlds',
+        scenario,
+        TextSubstitution(text='.wbt')
+    ])
 
     return LaunchDescription([
-        DeclareLaunchArgument('duration', default_value='10'),
-        DeclareLaunchArgument('log_interval', default_value='1.0'),
-        DeclareLaunchArgument('scenario', default_value='demo1'),
+        DeclareLaunchArgument('duration', default_value=TextSubstitution(text='10')),
+        DeclareLaunchArgument('log_interval', default_value=TextSubstitution(text='1.0')),
+        DeclareLaunchArgument('scenario', default_value=TextSubstitution(text='demo1')),
 
         ExecuteProcess(
             cmd=[
