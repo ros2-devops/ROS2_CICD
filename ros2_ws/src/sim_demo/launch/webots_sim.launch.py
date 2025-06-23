@@ -1,39 +1,29 @@
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, ExecuteProcess
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
-from launch_ros.substitutions import FindPackageShare
-from launch.substitutions import TextSubstitution
+from launch.substitutions import LaunchConfiguration
+
 
 def generate_launch_description():
-    duration = LaunchConfiguration('duration')
-    log_interval = LaunchConfiguration('log_interval')
-    scenario = LaunchConfiguration('scenario')
-
-    # Dynamically construct world path using PathJoinSubstitution
-    world_path = PathJoinSubstitution([
-        FindPackageShare('sim_demo'),
-        'worlds',
-        scenario,
-        TextSubstitution(text='.wbt')
-    ])
-
     return LaunchDescription([
-        DeclareLaunchArgument('duration', default_value=TextSubstitution(text='10')),
-        DeclareLaunchArgument('log_interval', default_value=TextSubstitution(text='1.0')),
-        DeclareLaunchArgument('scenario', default_value=TextSubstitution(text='demo1')),
+        DeclareLaunchArgument('duration', default_value='180'),
+        DeclareLaunchArgument('log_interval', default_value='1.0'),
+        DeclareLaunchArgument('scenario', default_value='demo1'),
 
+        # Launch Webots simulation with world file based on scenario
         ExecuteProcess(
             cmd=[
-                'webots', '--stdout', '--batch', world_path
+                'bash', '-c',
+                'webots --stdout --batch ros2_ws/src/sim_demo/worlds/${SCENARIO}.wbt'
             ],
             additional_env={
-                'SIM_DURATION': duration,
-                'LOG_INTERVAL': log_interval,
-                'SCENARIO': scenario
+                'SCENARIO': LaunchConfiguration('scenario'),
+                'SIM_DURATION': LaunchConfiguration('duration'),
+                'LOG_INTERVAL': LaunchConfiguration('log_interval'),
             },
             shell=True
         ),
 
+        # Launch the metrics collector node
         ExecuteProcess(
             cmd=['ros2', 'run', 'ros2_observability', 'metrics_collector'],
             shell=True,
