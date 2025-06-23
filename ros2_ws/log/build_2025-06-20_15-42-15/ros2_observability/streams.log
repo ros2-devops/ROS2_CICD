@@ -1,0 +1,32 @@
+[2.163s] Invoking command in '/home/ec24136/ROS2_CICD/ros2_ws/src/ros2_observability': PYTHONPATH=/home/ec24136/ROS2_CICD/ros2_ws/build/ros2_observability/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/ec24136/ROS2_CICD/ros2_ws/install/ros2_observability/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/ros2_observability build --build-base /home/ec24136/ROS2_CICD/ros2_ws/build/ros2_observability/build install --record /home/ec24136/ROS2_CICD/ros2_ws/build/ros2_observability/install.log --single-version-externally-managed install_data
+[2.735s] running egg_info
+[2.735s] creating ../../build/ros2_observability/ros2_observability.egg-info
+[2.774s] writing ../../build/ros2_observability/ros2_observability.egg-info/PKG-INFO
+[2.776s] writing dependency_links to ../../build/ros2_observability/ros2_observability.egg-info/dependency_links.txt
+[2.777s] writing entry points to ../../build/ros2_observability/ros2_observability.egg-info/entry_points.txt
+[2.777s] writing requirements to ../../build/ros2_observability/ros2_observability.egg-info/requires.txt
+[2.777s] writing top-level names to ../../build/ros2_observability/ros2_observability.egg-info/top_level.txt
+[2.777s] writing manifest file '../../build/ros2_observability/ros2_observability.egg-info/SOURCES.txt'
+[2.851s] reading manifest file '../../build/ros2_observability/ros2_observability.egg-info/SOURCES.txt'
+[2.852s] writing manifest file '../../build/ros2_observability/ros2_observability.egg-info/SOURCES.txt'
+[2.853s] running build
+[2.853s] running build_py
+[2.853s] creating /home/ec24136/ROS2_CICD/ros2_ws/build/ros2_observability/build
+[2.853s] creating /home/ec24136/ROS2_CICD/ros2_ws/build/ros2_observability/build/lib
+[2.854s] creating /home/ec24136/ROS2_CICD/ros2_ws/build/ros2_observability/build/lib/ros2_observability
+[2.854s] copying ros2_observability/__init__.py -> /home/ec24136/ROS2_CICD/ros2_ws/build/ros2_observability/build/lib/ros2_observability
+[2.854s] copying ros2_observability/metrics_collector.py -> /home/ec24136/ROS2_CICD/ros2_ws/build/ros2_observability/build/lib/ros2_observability
+[2.860s] running install
+[2.879s] running install_lib
+[2.918s] creating /home/ec24136/ROS2_CICD/ros2_ws/install/ros2_observability/lib/python3.12/site-packages/ros2_observability
+[2.919s] copying /home/ec24136/ROS2_CICD/ros2_ws/build/ros2_observability/build/lib/ros2_observability/__init__.py -> /home/ec24136/ROS2_CICD/ros2_ws/install/ros2_observability/lib/python3.12/site-packages/ros2_observability
+[2.922s] copying /home/ec24136/ROS2_CICD/ros2_ws/build/ros2_observability/build/lib/ros2_observability/metrics_collector.py -> /home/ec24136/ROS2_CICD/ros2_ws/install/ros2_observability/lib/python3.12/site-packages/ros2_observability
+[2.922s] byte-compiling /home/ec24136/ROS2_CICD/ros2_ws/install/ros2_observability/lib/python3.12/site-packages/ros2_observability/__init__.py to __init__.cpython-312.pyc
+[2.922s] byte-compiling /home/ec24136/ROS2_CICD/ros2_ws/install/ros2_observability/lib/python3.12/site-packages/ros2_observability/metrics_collector.py to metrics_collector.cpython-312.pyc
+[2.926s] running install_data
+[2.927s] running install_egg_info
+[2.967s] Copying ../../build/ros2_observability/ros2_observability.egg-info to /home/ec24136/ROS2_CICD/ros2_ws/install/ros2_observability/lib/python3.12/site-packages/ros2_observability-0.0.1-py3.12.egg-info
+[2.972s] running install_scripts
+[3.235s] Installing metrics_collector script to /home/ec24136/ROS2_CICD/ros2_ws/install/ros2_observability/lib/ros2_observability
+[3.236s] writing list of installed files to '/home/ec24136/ROS2_CICD/ros2_ws/build/ros2_observability/install.log'
+[3.321s] Invoked command in '/home/ec24136/ROS2_CICD/ros2_ws/src/ros2_observability' returned '0': PYTHONPATH=/home/ec24136/ROS2_CICD/ros2_ws/build/ros2_observability/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/ec24136/ROS2_CICD/ros2_ws/install/ros2_observability/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/ros2_observability build --build-base /home/ec24136/ROS2_CICD/ros2_ws/build/ros2_observability/build install --record /home/ec24136/ROS2_CICD/ros2_ws/build/ros2_observability/install.log --single-version-externally-managed install_data

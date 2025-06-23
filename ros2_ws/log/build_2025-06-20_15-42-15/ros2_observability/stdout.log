@@ -1,0 +1,30 @@
+running egg_info
+creating ../../build/ros2_observability/ros2_observability.egg-info
+writing ../../build/ros2_observability/ros2_observability.egg-info/PKG-INFO
+writing dependency_links to ../../build/ros2_observability/ros2_observability.egg-info/dependency_links.txt
+writing entry points to ../../build/ros2_observability/ros2_observability.egg-info/entry_points.txt
+writing requirements to ../../build/ros2_observability/ros2_observability.egg-info/requires.txt
+writing top-level names to ../../build/ros2_observability/ros2_observability.egg-info/top_level.txt
+writing manifest file '../../build/ros2_observability/ros2_observability.egg-info/SOURCES.txt'
+reading manifest file '../../build/ros2_observability/ros2_observability.egg-info/SOURCES.txt'
+writing manifest file '../../build/ros2_observability/ros2_observability.egg-info/SOURCES.txt'
+running build
+running build_py
+creating /home/ec24136/ROS2_CICD/ros2_ws/build/ros2_observability/build
+creating /home/ec24136/ROS2_CICD/ros2_ws/build/ros2_observability/build/lib
+creating /home/ec24136/ROS2_CICD/ros2_ws/build/ros2_observability/build/lib/ros2_observability
+copying ros2_observability/__init__.py -> /home/ec24136/ROS2_CICD/ros2_ws/build/ros2_observability/build/lib/ros2_observability
+copying ros2_observability/metrics_collector.py -> /home/ec24136/ROS2_CICD/ros2_ws/build/ros2_observability/build/lib/ros2_observability
+running install
+running install_lib
+creating /home/ec24136/ROS2_CICD/ros2_ws/install/ros2_observability/lib/python3.12/site-packages/ros2_observability
+copying /home/ec24136/ROS2_CICD/ros2_ws/build/ros2_observability/build/lib/ros2_observability/__init__.py -> /home/ec24136/ROS2_CICD/ros2_ws/install/ros2_observability/lib/python3.12/site-packages/ros2_observability
+copying /home/ec24136/ROS2_CICD/ros2_ws/build/ros2_observability/build/lib/ros2_observability/metrics_collector.py -> /home/ec24136/ROS2_CICD/ros2_ws/install/ros2_observability/lib/python3.12/site-packages/ros2_observability
+byte-compiling /home/ec24136/ROS2_CICD/ros2_ws/install/ros2_observability/lib/python3.12/site-packages/ros2_observability/__init__.py to __init__.cpython-312.pyc
+byte-compiling /home/ec24136/ROS2_CICD/ros2_ws/install/ros2_observability/lib/python3.12/site-packages/ros2_observability/metrics_collector.py to metrics_collector.cpython-312.pyc
+running install_data
+running install_egg_info
+Copying ../../build/ros2_observability/ros2_observability.egg-info to /home/ec24136/ROS2_CICD/ros2_ws/install/ros2_observability/lib/python3.12/site-packages/ros2_observability-0.0.1-py3.12.egg-info
+running install_scripts
+Installing metrics_collector script to /home/ec24136/ROS2_CICD/ros2_ws/install/ros2_observability/lib/ros2_observability
+writing list of installed files to '/home/ec24136/ROS2_CICD/ros2_ws/build/ros2_observability/install.log'

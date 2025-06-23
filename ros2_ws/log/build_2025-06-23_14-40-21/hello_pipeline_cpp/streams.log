@@ -1,0 +1,22 @@
+[0.344s] Invoking command in '/home/ec24136/ROS2_CICD/ros2_ws/build/hello_pipeline_cpp': CMAKE_PREFIX_PATH=/opt/ros/jazzy /usr/bin/cmake --build /home/ec24136/ROS2_CICD/ros2_ws/build/hello_pipeline_cpp -- -j2 -l2
+[0.716s] [100%] Built target hello_node
+[0.740s] Invoked command in '/home/ec24136/ROS2_CICD/ros2_ws/build/hello_pipeline_cpp' returned '0': CMAKE_PREFIX_PATH=/opt/ros/jazzy /usr/bin/cmake --build /home/ec24136/ROS2_CICD/ros2_ws/build/hello_pipeline_cpp -- -j2 -l2
+[0.762s] Invoking command in '/home/ec24136/ROS2_CICD/ros2_ws/build/hello_pipeline_cpp': CMAKE_PREFIX_PATH=/opt/ros/jazzy /usr/bin/cmake --install /home/ec24136/ROS2_CICD/ros2_ws/build/hello_pipeline_cpp
+[0.780s] -- Install configuration: ""
+[0.786s] -- Up-to-date: /home/ec24136/ROS2_CICD/ros2_ws/install/hello_pipeline_cpp/lib/hello_pipeline_cpp/hello_node
+[0.786s] -- Up-to-date: /home/ec24136/ROS2_CICD/ros2_ws/install/hello_pipeline_cpp/share/ament_index/resource_index/package_run_dependencies/hello_pipeline_cpp
+[0.791s] -- Up-to-date: /home/ec24136/ROS2_CICD/ros2_ws/install/hello_pipeline_cpp/share/ament_index/resource_index/parent_prefix_path/hello_pipeline_cpp
+[0.791s] -- Up-to-date: /home/ec24136/ROS2_CICD/ros2_ws/install/hello_pipeline_cpp/share/hello_pipeline_cpp/environment/ament_prefix_path.sh
+[0.791s] -- Up-to-date: /home/ec24136/ROS2_CICD/ros2_ws/install/hello_pipeline_cpp/share/hello_pipeline_cpp/environment/ament_prefix_path.dsv
+[0.791s] -- Up-to-date: /home/ec24136/ROS2_CICD/ros2_ws/install/hello_pipeline_cpp/share/hello_pipeline_cpp/environment/path.sh
+[0.791s] -- Up-to-date: /home/ec24136/ROS2_CICD/ros2_ws/install/hello_pipeline_cpp/share/hello_pipeline_cpp/environment/path.dsv
+[0.792s] -- Up-to-date: /home/ec24136/ROS2_CICD/ros2_ws/install/hello_pipeline_cpp/share/hello_pipeline_cpp/local_setup.bash
+[0.792s] -- Up-to-date: /home/ec24136/ROS2_CICD/ros2_ws/install/hello_pipeline_cpp/share/hello_pipeline_cpp/local_setup.sh
+[0.792s] -- Up-to-date: /home/ec24136/ROS2_CICD/ros2_ws/install/hello_pipeline_cpp/share/hello_pipeline_cpp/local_setup.zsh
+[0.792s] -- Up-to-date: /home/ec24136/ROS2_CICD/ros2_ws/install/hello_pipeline_cpp/share/hello_pipeline_cpp/local_setup.dsv
+[0.796s] -- Installing: /home/ec24136/ROS2_CICD/ros2_ws/install/hello_pipeline_cpp/share/hello_pipeline_cpp/package.dsv
+[0.796s] -- Up-to-date: /home/ec24136/ROS2_CICD/ros2_ws/install/hello_pipeline_cpp/share/ament_index/resource_index/packages/hello_pipeline_cpp
+[0.797s] -- Up-to-date: /home/ec24136/ROS2_CICD/ros2_ws/install/hello_pipeline_cpp/share/hello_pipeline_cpp/cmake/hello_pipeline_cppConfig.cmake
+[0.797s] -- Up-to-date: /home/ec24136/ROS2_CICD/ros2_ws/install/hello_pipeline_cpp/share/hello_pipeline_cpp/cmake/hello_pipeline_cppConfig-version.cmake
+[0.797s] -- Up-to-date: /home/ec24136/ROS2_CICD/ros2_ws/install/hello_pipeline_cpp/share/hello_pipeline_cpp/package.xml
+[0.799s] Invoked command in '/home/ec24136/ROS2_CICD/ros2_ws/build/hello_pipeline_cpp' returned '0': CMAKE_PREFIX_PATH=/opt/ros/jazzy /usr/bin/cmake --install /home/ec24136/ROS2_CICD/ros2_ws/build/hello_pipeline_cpp

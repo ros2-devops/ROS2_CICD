@@ -1,0 +1,40 @@
+[1.692s] Invoking command in '/home/ec24136/ROS2_CICD/ros2_ws/src/cpu_hog_controller': PYTHONPATH=/home/ec24136/ROS2_CICD/ros2_ws/build/cpu_hog_controller/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/ec24136/ROS2_CICD/ros2_ws/install/cpu_hog_controller/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/cpu_hog_controller build --build-base /home/ec24136/ROS2_CICD/ros2_ws/build/cpu_hog_controller/build install --record /home/ec24136/ROS2_CICD/ros2_ws/build/cpu_hog_controller/install.log --single-version-externally-managed install_data
+[2.274s] running egg_info
+[2.313s] writing ../../build/cpu_hog_controller/cpu_hog_controller.egg-info/PKG-INFO
+[2.314s] writing dependency_links to ../../build/cpu_hog_controller/cpu_hog_controller.egg-info/dependency_links.txt
+[2.316s] writing entry points to ../../build/cpu_hog_controller/cpu_hog_controller.egg-info/entry_points.txt
+[2.317s] writing requirements to ../../build/cpu_hog_controller/cpu_hog_controller.egg-info/requires.txt
+[2.317s] writing top-level names to ../../build/cpu_hog_controller/cpu_hog_controller.egg-info/top_level.txt
+[2.363s] file hog.py (for module hog) not found
+[2.401s] reading manifest file '../../build/cpu_hog_controller/cpu_hog_controller.egg-info/SOURCES.txt'
+[2.403s] writing manifest file '../../build/cpu_hog_controller/cpu_hog_controller.egg-info/SOURCES.txt'
+[2.406s] running build
+[2.406s] running build_py
+[2.407s] file hog.py (for module hog) not found
+[2.408s] creating /home/ec24136/ROS2_CICD/ros2_ws/build/cpu_hog_controller/build
+[2.408s] creating /home/ec24136/ROS2_CICD/ros2_ws/build/cpu_hog_controller/build/lib
+[2.409s] creating /home/ec24136/ROS2_CICD/ros2_ws/build/cpu_hog_controller/build/lib/cpu_hog_controller
+[2.410s] copying cpu_hog_controller/__init__.py -> /home/ec24136/ROS2_CICD/ros2_ws/build/cpu_hog_controller/build/lib/cpu_hog_controller
+[2.410s] copying cpu_hog_controller/cpu_hog_controller.py -> /home/ec24136/ROS2_CICD/ros2_ws/build/cpu_hog_controller/build/lib/cpu_hog_controller
+[2.413s] copying cpu_hog_controller/hog.py -> /home/ec24136/ROS2_CICD/ros2_ws/build/cpu_hog_controller/build/lib/cpu_hog_controller
+[2.414s] file hog.py (for module hog) not found
+[2.414s] running install
+[2.445s] running install_lib
+[2.490s] creating /home/ec24136/ROS2_CICD/ros2_ws/install/cpu_hog_controller/lib/python3.12/site-packages/cpu_hog_controller
+[2.491s] copying /home/ec24136/ROS2_CICD/ros2_ws/build/cpu_hog_controller/build/lib/cpu_hog_controller/__init__.py -> /home/ec24136/ROS2_CICD/ros2_ws/install/cpu_hog_controller/lib/python3.12/site-packages/cpu_hog_controller
+[2.491s] copying /home/ec24136/ROS2_CICD/ros2_ws/build/cpu_hog_controller/build/lib/cpu_hog_controller/cpu_hog_controller.py -> /home/ec24136/ROS2_CICD/ros2_ws/install/cpu_hog_controller/lib/python3.12/site-packages/cpu_hog_controller
+[2.494s] copying /home/ec24136/ROS2_CICD/ros2_ws/build/cpu_hog_controller/build/lib/cpu_hog_controller/hog.py -> /home/ec24136/ROS2_CICD/ros2_ws/install/cpu_hog_controller/lib/python3.12/site-packages/cpu_hog_controller
+[2.495s] byte-compiling /home/ec24136/ROS2_CICD/ros2_ws/install/cpu_hog_controller/lib/python3.12/site-packages/cpu_hog_controller/__init__.py to __init__.cpython-312.pyc
+[2.496s] byte-compiling /home/ec24136/ROS2_CICD/ros2_ws/install/cpu_hog_controller/lib/python3.12/site-packages/cpu_hog_controller/cpu_hog_controller.py to cpu_hog_controller.cpython-312.pyc
+[2.498s] byte-compiling /home/ec24136/ROS2_CICD/ros2_ws/install/cpu_hog_controller/lib/python3.12/site-packages/cpu_hog_controller/hog.py to hog.cpython-312.pyc
+[2.499s] running install_data
+[2.500s] creating /home/ec24136/ROS2_CICD/ros2_ws/install/cpu_hog_controller/share
+[2.501s] creating /home/ec24136/ROS2_CICD/ros2_ws/install/cpu_hog_controller/share/cpu_hog_controller
+[2.502s] copying package.xml -> /home/ec24136/ROS2_CICD/ros2_ws/install/cpu_hog_controller/share/cpu_hog_controller
+[2.503s] running install_egg_info
+[2.551s] Copying ../../build/cpu_hog_controller/cpu_hog_controller.egg-info to /home/ec24136/ROS2_CICD/ros2_ws/install/cpu_hog_controller/lib/python3.12/site-packages/cpu_hog_controller-0.1.0-py3.12.egg-info
+[2.554s] running install_scripts
+[2.839s] Installing hog script to /home/ec24136/ROS2_CICD/ros2_ws/install/cpu_hog_controller/lib/cpu_hog_controller
+[2.840s] file hog.py (for module hog) not found
+[2.842s] writing list of installed files to '/home/ec24136/ROS2_CICD/ros2_ws/build/cpu_hog_controller/install.log'
+[2.931s] Invoked command in '/home/ec24136/ROS2_CICD/ros2_ws/src/cpu_hog_controller' returned '0': PYTHONPATH=/home/ec24136/ROS2_CICD/ros2_ws/build/cpu_hog_controller/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/ec24136/ROS2_CICD/ros2_ws/install/cpu_hog_controller/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/cpu_hog_controller build --build-base /home/ec24136/ROS2_CICD/ros2_ws/build/cpu_hog_controller/build install --record /home/ec24136/ROS2_CICD/ros2_ws/build/cpu_hog_controller/install.log --single-version-externally-managed install_data
