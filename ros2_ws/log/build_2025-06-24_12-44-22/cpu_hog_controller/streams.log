@@ -1,0 +1,28 @@
+[0.017s] Invoking command in '/home/ec24136/ROS2_CICD/ros2_ws/build/cpu_hog_controller': /usr/bin/cmake --build /home/ec24136/ROS2_CICD/ros2_ws/build/cpu_hog_controller -- -j2 -l2
+[0.102s] -- Found ament_cmake: 2.5.4 (/opt/ros/jazzy/share/ament_cmake/cmake)
+[0.677s] -- Configuring done (0.6s)
+[0.683s] -- Generating done (0.0s)
+[0.688s] -- Build files have been written to: /home/ec24136/ROS2_CICD/ros2_ws/build/cpu_hog_controller
+[0.738s] Invoked command in '/home/ec24136/ROS2_CICD/ros2_ws/build/cpu_hog_controller' returned '0': /usr/bin/cmake --build /home/ec24136/ROS2_CICD/ros2_ws/build/cpu_hog_controller -- -j2 -l2
+[0.755s] Invoking command in '/home/ec24136/ROS2_CICD/ros2_ws/build/cpu_hog_controller': /usr/bin/cmake --install /home/ec24136/ROS2_CICD/ros2_ws/build/cpu_hog_controller
+[0.768s] -- Install configuration: ""
+[0.769s] -- Installing: /home/ec24136/ROS2_CICD/ros2_ws/install/cpu_hog_controller/lib/python3.10/site-packages/cpu_hog_controller
+[0.769s] -- Installing: /home/ec24136/ROS2_CICD/ros2_ws/install/cpu_hog_controller/lib/python3.10/site-packages/cpu_hog_controller/__init__.py
+[0.769s] -- Installing: /home/ec24136/ROS2_CICD/ros2_ws/install/cpu_hog_controller/lib/python3.10/site-packages/cpu_hog_controller/cpu_hog_controller.py
+[0.772s] -- Installing: /home/ec24136/ROS2_CICD/ros2_ws/install/cpu_hog_controller/lib/python3.10/site-packages/cpu_hog_controller/hog.py
+[0.775s] -- Installing: /home/ec24136/ROS2_CICD/ros2_ws/install/cpu_hog_controller/share/ament_index/resource_index/package_run_dependencies/cpu_hog_controller
+[0.776s] -- Installing: /home/ec24136/ROS2_CICD/ros2_ws/install/cpu_hog_controller/share/ament_index/resource_index/parent_prefix_path/cpu_hog_controller
+[0.777s] -- Installing: /home/ec24136/ROS2_CICD/ros2_ws/install/cpu_hog_controller/share/cpu_hog_controller/environment/ament_prefix_path.sh
+[0.777s] -- Installing: /home/ec24136/ROS2_CICD/ros2_ws/install/cpu_hog_controller/share/cpu_hog_controller/environment/ament_prefix_path.dsv
+[0.777s] -- Installing: /home/ec24136/ROS2_CICD/ros2_ws/install/cpu_hog_controller/share/cpu_hog_controller/environment/path.sh
+[0.778s] -- Installing: /home/ec24136/ROS2_CICD/ros2_ws/install/cpu_hog_controller/share/cpu_hog_controller/environment/path.dsv
+[0.779s] -- Installing: /home/ec24136/ROS2_CICD/ros2_ws/install/cpu_hog_controller/share/cpu_hog_controller/local_setup.bash
+[0.780s] -- Installing: /home/ec24136/ROS2_CICD/ros2_ws/install/cpu_hog_controller/share/cpu_hog_controller/local_setup.sh
+[0.782s] -- Installing: /home/ec24136/ROS2_CICD/ros2_ws/install/cpu_hog_controller/share/cpu_hog_controller/local_setup.zsh
+[0.782s] -- Installing: /home/ec24136/ROS2_CICD/ros2_ws/install/cpu_hog_controller/share/cpu_hog_controller/local_setup.dsv
+[0.782s] -- Up-to-date: /home/ec24136/ROS2_CICD/ros2_ws/install/cpu_hog_controller/share/cpu_hog_controller/package.dsv
+[0.782s] -- Installing: /home/ec24136/ROS2_CICD/ros2_ws/install/cpu_hog_controller/share/ament_index/resource_index/packages/cpu_hog_controller
+[0.783s] -- Installing: /home/ec24136/ROS2_CICD/ros2_ws/install/cpu_hog_controller/share/cpu_hog_controller/cmake/cpu_hog_controllerConfig.cmake
+[0.783s] -- Installing: /home/ec24136/ROS2_CICD/ros2_ws/install/cpu_hog_controller/share/cpu_hog_controller/cmake/cpu_hog_controllerConfig-version.cmake
+[0.783s] -- Installing: /home/ec24136/ROS2_CICD/ros2_ws/install/cpu_hog_controller/share/cpu_hog_controller/package.xml
+[0.786s] Invoked command in '/home/ec24136/ROS2_CICD/ros2_ws/build/cpu_hog_controller' returned '0': /usr/bin/cmake --install /home/ec24136/ROS2_CICD/ros2_ws/build/cpu_hog_controller

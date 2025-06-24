@@ -1,0 +1,37 @@
+[0.020s] Invoking command in '/home/ec24136/ROS2_CICD/ros2_ws/build/cpu_hog_controller': /usr/bin/cmake /home/ec24136/ROS2_CICD/ros2_ws/src/cpu_hog_controller -DCATKIN_INSTALL_INTO_PREFIX_ROOT=0 -DCMAKE_INSTALL_PREFIX=/home/ec24136/ROS2_CICD/ros2_ws/install/cpu_hog_controller
+[0.564s] -- The C compiler identification is GNU 13.3.0
+[0.997s] -- The CXX compiler identification is GNU 13.3.0
+[1.080s] -- Detecting C compiler ABI info
+[1.393s] -- Detecting C compiler ABI info - done
+[1.422s] -- Check for working C compiler: /usr/bin/cc - skipped
+[1.425s] -- Detecting C compile features
+[1.429s] -- Detecting C compile features - done
+[1.472s] -- Detecting CXX compiler ABI info
+[1.876s] -- Detecting CXX compiler ABI info - done
+[1.918s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[1.919s] -- Detecting CXX compile features
+[1.922s] -- Detecting CXX compile features - done
+[1.966s] -- Found ament_cmake: 2.5.4 (/opt/ros/jazzy/share/ament_cmake/cmake)
+[2.542s] -- Found Python3: /usr/bin/python3 (found version "3.12.3") found components: Interpreter 
+[3.270s] -- Found rclpy: 7.1.4 (/opt/ros/jazzy/share/rclpy/cmake)
+[3.479s] -- Configuring done (3.4s)
+[3.489s] -- Generating done (0.0s)
+[3.489s] [33mCMake Warning:
+[3.489s]   Manually-specified variables were not used by the project:
+[3.490s] 
+[3.490s]     CATKIN_INSTALL_INTO_PREFIX_ROOT
+[3.490s] 
+[3.490s] [0m
+[3.492s] -- Build files have been written to: /home/ec24136/ROS2_CICD/ros2_ws/build/cpu_hog_controller
+[3.507s] Invoked command in '/home/ec24136/ROS2_CICD/ros2_ws/build/cpu_hog_controller' returned '0': /usr/bin/cmake /home/ec24136/ROS2_CICD/ros2_ws/src/cpu_hog_controller -DCATKIN_INSTALL_INTO_PREFIX_ROOT=0 -DCMAKE_INSTALL_PREFIX=/home/ec24136/ROS2_CICD/ros2_ws/install/cpu_hog_controller
+[3.510s] Invoking command in '/home/ec24136/ROS2_CICD/ros2_ws/build/cpu_hog_controller': /usr/bin/cmake --build /home/ec24136/ROS2_CICD/ros2_ws/build/cpu_hog_controller -- -j2 -l2
+[3.577s] Invoked command in '/home/ec24136/ROS2_CICD/ros2_ws/build/cpu_hog_controller' returned '0': /usr/bin/cmake --build /home/ec24136/ROS2_CICD/ros2_ws/build/cpu_hog_controller -- -j2 -l2
+[3.595s] Invoking command in '/home/ec24136/ROS2_CICD/ros2_ws/build/cpu_hog_controller': /usr/bin/cmake --install /home/ec24136/ROS2_CICD/ros2_ws/build/cpu_hog_controller
+[3.609s] -- Install configuration: ""
+[3.611s] [31mCMake Error at cmake_install.cmake:46 (file):
+[3.611s]   file INSTALL cannot find
+[3.611s]   "/home/ec24136/ROS2_CICD/ros2_ws/src/cpu_hog_controller/cpu_hog_controller.py":
+[3.612s]   No such file or directory.
+[3.612s] 
+[3.613s] [0m
+[3.615s] Invoked command in '/home/ec24136/ROS2_CICD/ros2_ws/build/cpu_hog_controller' returned '1': /usr/bin/cmake --install /home/ec24136/ROS2_CICD/ros2_ws/build/cpu_hog_controller

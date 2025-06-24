@@ -1,0 +1,10 @@
+[0.038s] Invoking command in '/home/ec24136/ROS2_CICD/ros2_ws/build/cpu_hog_controller': /usr/bin/cmake /home/ec24136/ROS2_CICD/ros2_ws/src/cpu_hog_controller -DCATKIN_INSTALL_INTO_PREFIX_ROOT=0 -DCMAKE_INSTALL_PREFIX=/home/ec24136/ROS2_CICD/ros2_ws/install/cpu_hog_controller
+[0.198s] [33mCMake Warning:
+[0.199s]   Ignoring extra path from command line:
+[0.199s] 
+[0.199s]    "/home/ec24136/ROS2_CICD/ros2_ws/src/cpu_hog_controller"
+[0.199s] 
+[0.199s] [0m
+[0.205s] [0mCMake Error: The source directory "/home/ec24136/ROS2_CICD/ros2_ws/src/cpu_hog_controller" does not appear to contain CMakeLists.txt.
+[0.205s] Specify --help for usage, or press the help button on the CMake GUI.[0m
+[0.224s] Invoked command in '/home/ec24136/ROS2_CICD/ros2_ws/build/cpu_hog_controller' returned '1': /usr/bin/cmake /home/ec24136/ROS2_CICD/ros2_ws/src/cpu_hog_controller -DCATKIN_INSTALL_INTO_PREFIX_ROOT=0 -DCMAKE_INSTALL_PREFIX=/home/ec24136/ROS2_CICD/ros2_ws/install/cpu_hog_controller
