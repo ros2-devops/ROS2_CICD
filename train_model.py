@@ -10,6 +10,8 @@ import sys
 import pandas as pd
 import joblib
 from sklearn.ensemble import IsolationForest
+import os
+
 
 # ── Handle CLI arg ───────────────────────────────
 if len(sys.argv) != 2:
@@ -22,8 +24,20 @@ if not os.path.exists(csv_path):
     print(f"File {csv_path} not found")
     sys.exit(1)
 
+
 # ── Load and clean data ──────────────────────────
 df = pd.read_csv(csv_path, header=None, names=["Time", "CPU", "Memory"])
+
+# Convert CPU and Memory to numeric types (in case strings slipped in)
+df["CPU"] = pd.to_numeric(df["CPU"], errors="coerce")
+df["Memory"] = pd.to_numeric(df["Memory"], errors="coerce")
+
+# Drop any rows with missing or invalid values
+df = df.dropna()
+
+df["cpu_norm"] = df["CPU"] / df["CPU"].max()
+X = df[["cpu_norm"]]
+
 
 df = df.dropna()
 df["cpu_norm"] = df["CPU"] / df["CPU"].max()

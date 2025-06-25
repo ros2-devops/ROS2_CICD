@@ -152,6 +152,7 @@ jobs:
         with:
           name: training_data
           path: data_store/ros_metrics_all.csv
+          overwrite: true
 
 
   docker:
@@ -174,16 +175,3 @@ jobs:
           IMAGE_NAME=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/ros2_cicd:latest
           docker build -t "$IMAGE_NAME" .
           docker push "$IMAGE_NAME"
-  retrain_model:
-    needs: simulate
-    if: github.event_name == 'schedule'  # or manually trigger
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Download training data
-        uses: actions/download-artifact@v4
-        with:
-          name: training_data
-          path: .
-      
-      - name: Train updated model
-        run: python3 train_model.py ros_metrics_all.csv
