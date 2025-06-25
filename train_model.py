@@ -12,7 +12,6 @@ import joblib
 from sklearn.ensemble import IsolationForest
 import os
 
-
 # ── Handle CLI arg ───────────────────────────────
 if len(sys.argv) != 2:
     print("Usage: python3 train_model.py <csv_path>")
@@ -24,23 +23,21 @@ if not os.path.exists(csv_path):
     print(f"File {csv_path} not found")
     sys.exit(1)
 
-
 # ── Load and clean data ──────────────────────────
-df = pd.read_csv(csv_path, header=None, names=["Time", "CPU", "Memory"])
+df = pd.read_csv(csv_path, header=None,
+                 names=["Time", "Memory", "CPU", "Scenario", "Run"])
 
-# Convert CPU and Memory to numeric types (in case strings slipped in)
+# Convert numeric columns
 df["CPU"] = pd.to_numeric(df["CPU"], errors="coerce")
 df["Memory"] = pd.to_numeric(df["Memory"], errors="coerce")
 
-# Drop any rows with missing or invalid values
-df = df.dropna()
+# Drop rows with missing or invalid values
+df = df.dropna(subset=["CPU", "Memory"])
 
+# Normalize CPU usage
 df["cpu_norm"] = df["CPU"] / df["CPU"].max()
-X = df[["cpu_norm"]]
 
-
-df = df.dropna()
-df["cpu_norm"] = df["CPU"] / df["CPU"].max()
+# Extract features
 X = df[["cpu_norm"]]
 
 # ── Train model ──────────────────────────────────

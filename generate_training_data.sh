@@ -15,7 +15,7 @@ echo "Starting simulation batch to collect training data..."
 
 for scenario in "${SCENARIOS[@]}"; do
   for ((i=1; i<=REPEAT; i++)); do
-    echo "▶[$scenario] Run $i/$REPEAT"
+    echo "[$scenario] Run $i/$REPEAT"
     export SCENARIO=$scenario
     export SIM_DURATION=$DURATION
     export LOG_INTERVAL=$INTERVAL
