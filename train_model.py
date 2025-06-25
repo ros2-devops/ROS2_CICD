@@ -1,24 +1,37 @@
-# train_model.py
+#!/usr/bin/env python3
+
+"""
+Train anomaly detection model from accumulated metrics
+• Usage: python3 train_model.py ros_metrics_all.csv
+• Output: anomaly_model.pkl
+"""
+
+import sys
 import pandas as pd
-from sklearn.ensemble import IsolationForest
 import joblib
+from sklearn.ensemble import IsolationForest
 
-# Load data
-df = pd.read_csv("datasets/borg_tru_small.csv")
+# ── Handle CLI arg ───────────────────────────────
+if len(sys.argv) != 2:
+    print("Usage: python3 train_model.py <csv_path>")
+    sys.exit(1)
 
-# Keep timestamp and CPU column, drop any NaNs
-df = df[['timestamp', 'mean_CPU_usage_rate']].dropna()
+csv_path = sys.argv[1]
 
-# Normalize CPU to 0–1 scale
-df['cpu_norm'] = df['mean_CPU_usage_rate'] / df['mean_CPU_usage_rate'].max()
+if not os.path.exists(csv_path):
+    print(f"File {csv_path} not found")
+    sys.exit(1)
 
-# Isolation Forest expects 2D input
-X = df[['cpu_norm']]
+# ── Load and clean data ──────────────────────────
+df = pd.read_csv(csv_path, header=None, names=["Time", "CPU", "Memory"])
 
-# Train Isolation Forest
-model = IsolationForest(contamination=0.05, random_state=42)
+df = df.dropna()
+df["cpu_norm"] = df["CPU"] / df["CPU"].max()
+X = df[["cpu_norm"]]
+
+# ── Train model ──────────────────────────────────
+model = IsolationForest(n_estimators=100, contamination=0.1, random_state=42)
 model.fit(X)
 
-# Save trained model
 joblib.dump(model, "anomaly_model.pkl")
-print("✅ Model trained and saved as anomaly_model.pkl")
+print("Model trained and saved as anomaly_model.pkl")

@@ -46,6 +46,14 @@ jobs:
           cd ros2_ws
           colcon build
 
+      - name: Download previous accumulated metrics
+        uses: actions/download-artifact@v4
+        with:
+          name: training_data
+          path: data_store
+        continue-on-error: true  # Allow CI to proceed if artifact not found (first run)
+
+
       - name: Run simulation with assertions
         id: run_sim
         run: |
@@ -74,6 +82,21 @@ jobs:
         with:
           name: ros_metrics_${{ matrix.scenario }}
           path: ros_metrics_${{ matrix.scenario }}.csv
+
+      - name: Merge new metrics with accumulated data
+        run: |
+          FILE="ros_metrics_${{ matrix.scenario }}.csv"
+          ACC="data_store/ros_metrics_all.csv"
+
+          if [ -f "$ACC" ]; then
+            echo "Appending to accumulated metrics"
+            tail -n +2 "$FILE" >> "$ACC"  # skip header in new file
+          else
+            echo "Creating new accumulated metrics file"
+            mkdir -p data_store
+            cp "$FILE" "$ACC"
+          fi
+
 
       - name: Upload assertion result
         uses: actions/upload-artifact@v4
@@ -124,6 +147,12 @@ jobs:
           name: evaluation_log_${{ matrix.scenario }}
           path: evaluation_log_${{ matrix.scenario }}.csv
 
+      - name: Upload updated training data
+        uses: actions/upload-artifact@v4
+        with:
+          name: training_data
+          path: data_store/ros_metrics_all.csv
+
 
   docker:
     needs: simulate
@@ -145,3 +174,16 @@ jobs:
           IMAGE_NAME=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/ros2_cicd:latest
           docker build -t "$IMAGE_NAME" .
           docker push "$IMAGE_NAME"
+  retrain_model:
+    needs: simulate
+    if: github.event_name == 'schedule'  # or manually trigger
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Download training data
+        uses: actions/download-artifact@v4
+        with:
+          name: training_data
+          path: .
+      
+      - name: Train updated model
+        run: python3 train_model.py ros_metrics_all.csv
