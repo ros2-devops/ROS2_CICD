@@ -80,13 +80,11 @@ lines = [
 ]
 
 if latest_an is not None:
-    lines += [
-        "",
-        "AI-Detected Anomalies:",
-        f"   Count  : {latest_an['AnomalyScore']}",
-        f"   Type   : {latest_an['AnomalyType']}",
-        f"   Action : {latest_an['AI_Action']}"
-    ]
+    lines += ["", "AI-Detected Anomalies:"]
+    for key in ["AnomalyCount", "AnomalyType", "AI_Action"]:
+        val = latest_an.get(key, "N/A")
+        lines.append(f"   {key.replace('_', ' '):<8}: {val}")
+
 
 summary_text = "\n".join(lines)
 
