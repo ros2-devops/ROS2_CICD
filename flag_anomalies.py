@@ -54,15 +54,20 @@ with open(result_path, "w") as f:
 
 print(f"✓ {result_path}")
 
-# Plot
+# ── Plot --------------------------------------------------------------
+t   = df["Time"].to_numpy()
+cpu = df["CPU"].to_numpy()
+anom_mask = df["anomaly"].to_numpy() == -1
+
 plt.figure()
-plt.plot(df["Time"], df["CPU"], label="CPU %", lw=0.6)
-plt.scatter(df.loc[df.anomaly==-1,"Time"],
-            df.loc[df.anomaly==-1,"CPU"],
+plt.plot(t, cpu, label="CPU %", lw=0.6)
+plt.scatter(t[anom_mask], cpu[anom_mask],
             c="red", s=8, label="Anomaly", zorder=5)
 plt.title(f"CPU Anomalies – {scenario}")
 plt.xlabel("Time (s)"); plt.ylabel("CPU (%)"); plt.legend()
-plt.tight_layout(); plt.savefig(plot_path); print(f"✓ {plot_path}")
+plt.tight_layout(); plt.savefig(plot_path)
+print(f"✓ {plot_path}")
+
 
 # Append structured log
 ts = datetime.now().isoformat()
