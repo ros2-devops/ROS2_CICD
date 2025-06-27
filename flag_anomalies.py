@@ -1,112 +1,76 @@
 #!/usr/bin/env python3
 """
-AI-Powered Anomaly Detection and Action Logger
-• Detects anomalies from ros_metrics_<scenario>.csv
-• Applies pretrained model (Isolation Forest)
-• Logs structured summary with timestamp, scenario, type, and action
+AI-Powered Anomaly Detection & Logger (pipeline-aware)
+• Reads ros_metrics_<scenario>.csv  (6 feature columns produced by MetricsCollector)
+• Loads pipeline model (StandardScaler + IsolationForest)
+• Logs anomaly summary, plot, and structured CSV
 """
 
-import os
-import pandas as pd
-import joblib
-import matplotlib.pyplot as plt
-import numpy as np
+import os, sys, pandas as pd, joblib, matplotlib.pyplot as plt
 from datetime import datetime
 
-# ── Setup ──────────────────────────────
-scenario = os.getenv("SCENARIO", "unknown")
+# -------------------------------------------------------------------
+scenario      = os.getenv("SCENARIO", "unknown")
+csv_path      = f"ros_metrics_{scenario}.csv"
+model_path    = "anomaly_model_iforest.pkl"   # <- NEW model
+result_path   = f"anomaly_result_{scenario}.txt"
+plot_path     = f"anomaly_plot_{scenario}.png"
+log_path      = f"anomaly_result_log_{scenario}.csv"
 
-ros_metrics_path = f"ros_metrics_{scenario}.csv"
-model_path = "anomaly_model.pkl"
-result_path = f"anomaly_result_{scenario}.txt"
-plot_path = f"anomaly_plot_{scenario}.png"
-log_path = f"anomaly_result_log_{scenario}.csv"
+feature_cols  = ["CPU","Mem","CPU_roll","CPU_slope","Mem_roll","Mem_slope"]
+# -------------------------------------------------------------------
 
-# ── Validate input ─────────────────────
-if not os.path.exists(ros_metrics_path):
-    print(f"{ros_metrics_path} not found")
-    exit(1)
+if not os.path.exists(csv_path):
+    sys.exit(f"{csv_path} not found")
 
-df = pd.read_csv(ros_metrics_path, header=None, names=["Time", "CPU", "Memory"])
+# read – skip header row already present
+df = pd.read_csv(csv_path, names=["Time"] + feature_cols, skiprows=1)
 
-# ── Preprocess ─────────────────────────
-df["cpu_norm"] = df["CPU"] / df["CPU"].max()
-X = df[["cpu_norm"]]
+# convert every feature col to float (handles stray strings)
+for c in feature_cols:
+    df[c] = pd.to_numeric(df[c], errors="coerce")
+df = df.dropna(subset=feature_cols)
 
-# ── Load model ─────────────────────────
+# -------------------------------------------------------------------
 if not os.path.exists(model_path):
-    print("Trained model not found (anomaly_model.pkl)")
-    exit(1)
+    sys.exit(f"Model {model_path} not found")
 
-model = joblib.load(model_path)
-df["anomaly"] = model.predict(X)
+pipe = joblib.load(model_path)
+df["anomaly"] = pipe.predict(df[feature_cols])
 
-# ── Count anomalies ────────────────────
-num_anomalies = (df["anomaly"] == -1).sum()
-cpu_anomalies = df[df["CPU"] > 80]
-mem_anomalies = df[df["Memory"] > 75]
+num_anom  = (df["anomaly"] == -1).sum()
+action    = "Investigate trend" if num_anom else "No action"
+anom_type = "CPU/Mem trends"    if num_anom else "None"
 
-# ── Decide action only if real resource issue ───────
-if num_anomalies > 0 and (not cpu_anomalies.empty or not mem_anomalies.empty):
-    if not cpu_anomalies.empty and mem_anomalies.empty:
-        anomaly_type = "CPU"
-        action = "Scale CPU allocation"
-    elif not mem_anomalies.empty and cpu_anomalies.empty:
-        anomaly_type = "Memory"
-        action = "Optimize memory usage"
-    else:
-        anomaly_type = "Both"
-        action = "Initiate load balancing"
-    result_flag = True
-else:
-    anomaly_type = "None"
-    action = "No action"
-    result_flag = False
-
-# ── Write anomaly_result_<scenario>.txt ──────────────
+# -------------------------------------------------------------------
 with open(result_path, "w") as f:
-    if result_flag:
+    if num_anom:
         f.write("ANOMALY DETECTED\n")
-        f.write(f"Count: {num_anomalies} rows\n")
-        f.write(f"Type: {anomaly_type}\n")
+        f.write(f"Count: {num_anom}\n")
+        f.write(f"Type: {anom_type}\n")
         f.write(f"AI Action: {action}\n")
     else:
-        f.write("NO ANOMALY\n")
-        f.write("AI Action: No action\n")
+        f.write("NO ANOMALY\nAI Action: No action\n")
 
-print(f"{result_path} written")
+print(f"✓ {result_path}")
 
-# ── Plot anomalies ───────────────────────────────────
-df["Time"] = pd.to_numeric(df["Time"], errors="coerce")
-df = df.dropna(subset=["Time", "CPU", "anomaly"])
-# ── Safe plotting fix ────────────────────────────────
-times = df["Time"].values
-cpu = df["CPU"].values
-anomalies = df["anomaly"].values
-anomaly_mask = anomalies == -1
-
+# Plot
 plt.figure()
-plt.plot(times, cpu, label="CPU %", alpha=0.7)
-plt.scatter(times[anomaly_mask], cpu[anomaly_mask],
-            color="red", label="Anomaly", zorder=5)
-plt.xlabel("Time (s)")
-plt.ylabel("CPU Usage (%)")
-plt.title(f"CPU Anomalies Over Time – {scenario}")
-plt.legend()
-plt.tight_layout()
-plt.savefig(plot_path)
-print(f"{plot_path} saved")
+plt.plot(df["Time"], df["CPU"], label="CPU %", lw=0.6)
+plt.scatter(df.loc[df.anomaly==-1,"Time"],
+            df.loc[df.anomaly==-1,"CPU"],
+            c="red", s=8, label="Anomaly", zorder=5)
+plt.title(f"CPU Anomalies – {scenario}")
+plt.xlabel("Time (s)"); plt.ylabel("CPU (%)"); plt.legend()
+plt.tight_layout(); plt.savefig(plot_path); print(f"✓ {plot_path}")
 
+# Append structured log
+ts = datetime.now().isoformat()
+header = "Timestamp,Scenario,AnomalyCount,AnomalyType,AI_Action\n"
+line   = f"{ts},{scenario},{num_anom},{anom_type},{action}\n"
 
-# ── Append structured log ───────────────
-timestamp = datetime.now().isoformat()
-header = "Timestamp,Scenario,AnomalyScore,AnomalyType,AI_Action\n"
-line = f"{timestamp},{scenario},{num_anomalies},{anomaly_type},{action}\n"
-
-write_header = not os.path.exists(log_path) or os.stat(log_path).st_size == 0
-with open(log_path, "a") as log:
-    if write_header:
-        log.write(header)
-    log.write(line)
-
-print(f"{log_path} updated.")
+need_header = not os.path.exists(log_path)
+with open(log_path, "a") as f:
+    if need_header: f.write(header)
+    f.write(line)
+print(f"✓ {log_path} updated")
