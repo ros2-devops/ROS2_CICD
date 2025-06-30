@@ -28,12 +28,12 @@ feature_cols = ["CPU", "Memory", "CPU_roll",
                 "CPU_slope", "Mem_roll", "Mem_slope"]
 
 model_files = {
-    "cnn_lstm": ("trained_models/anomaly_model_cnnlstm.keras",
-                 "trained_models/cnn_lstm_threshold.pkl"),
-    "ae":       ("trained_models/anomaly_model_ae.keras",
-                 "trained_models/ae_threshold.pkl"),
-    "iforest":  ("trained_models/anomaly_model_iforest.pkl", None)
+    "cnn_lstm": ("anomaly_model_cnnlstm.keras", "cnn_lstm_threshold.pkl"),
+    "ae":       ("anomaly_model_ae.keras",       "ae_threshold.pkl"),
+    "iforest":  ("anomaly_model_iforest.pkl",    None)
 }
+
+
 model_file, thresh_file = model_files.get(selector, model_files["cnn_lstm"])
 
 # ─────── path checks ──────────────────────────────────────────────────
