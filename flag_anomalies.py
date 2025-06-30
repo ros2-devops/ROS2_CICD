@@ -34,7 +34,7 @@ model_files = {
                  "trained_models/ae_threshold.pkl"),
     "iforest":  ("trained_models/anomaly_model_iforest.pkl", None)
 }
-model_file, thresh_file = files.get(selector, files["cnn_lstm"])
+model_file, thresh_file = model_files.get(selector, model_files["cnn_lstm"])
 
 # ─────── path checks ──────────────────────────────────────────────────
 def need(path, msg):
