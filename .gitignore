@@ -52,3 +52,4 @@ CATKIN_IGNORE
 
 ros_metrics.csv
 *.npy
+X_scaled.npy
