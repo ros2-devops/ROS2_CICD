@@ -1,27 +1,33 @@
 #!/usr/bin/env python3
 """
-prepare_dataset.py  – clean & enrich raw metrics
-Usage: python3 prepare_dataset.py data_store/ros_metrics_all.csv
-Result: data_store/features.csv
+Convert ros_metrics_all.csv → numpy arrays for sequence models
+Outputs:
+  X_seq.npy   shape (N, win, feat)
+  scaler.pkl  (StandardScaler fitted on all features)
 """
 
-import sys, os, pandas as pd
+import pandas as pd, numpy as np, joblib, sys, os
+from sklearn.preprocessing import StandardScaler
 
-if len(sys.argv)!=2:
-    print("Usage: prepare_dataset.py <raw_csv>"); sys.exit(1)
+CSV = "data_store/ros_metrics_all.csv"
+WIN = 30                # 30 consecutive rows ≈ 15 s with LOG_INTERVAL=0.5
 
-raw   = sys.argv[1]
-clean = os.path.join(os.path.dirname(raw), "features.csv")
+df = (pd.read_csv(CSV, header=None,
+        names=["Time","CPU","Memory",
+               "CPU_roll","CPU_slope","Mem_roll","Mem_slope"])
+        .apply(pd.to_numeric, errors="coerce").dropna())
 
-cols  = ["Time","CPU","Memory","CPU_roll","CPU_slope","Mem_roll","Mem_slope"]
-df    = pd.read_csv(raw, names=cols)
+features = df[["CPU","Memory","CPU_roll","CPU_slope",
+               "Mem_roll","Mem_slope"]].values
 
-# drop bad / duplicates
-df = df.dropna().drop_duplicates()
+scaler = StandardScaler().fit(features)
+feat_scaled = scaler.transform(features)
 
-# min-max normalise level features
-for c in ["CPU","Memory","CPU_roll","Mem_roll"]:
-    df[f"{c}_norm"] = (df[c]-df[c].min())/(df[c].max()-df[c].min())
-
-df.to_csv(clean, index=False)
-print(" cleaned →", clean, len(df), "rows")
+# sliding windows ---------------------------------------------------------
+X = []
+for i in range(len(feat_scaled) - WIN):
+    X.append(feat_scaled[i:i+WIN])
+X = np.asarray(X, dtype=np.float32)
+np.save("X_seq.npy", X)
+joblib.dump(scaler, "scaler.pkl")
+print("Saved:", X.shape, "→ X_seq.npy  & scaler.pkl")

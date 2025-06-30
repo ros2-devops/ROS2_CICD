@@ -46,6 +46,7 @@ jobs:
           cd ros2_ws
           colcon build
 
+
       - name: Run simulation with assertions
         id: run_sim
         run: |
@@ -87,24 +88,35 @@ jobs:
           name: simulation_log_${{ matrix.scenario }}
           path: simulation_log_${{ matrix.scenario }}.csv
 
-      - name: Run AI anomaly detection
+      - name: Run AI anomaly detection for all models
         run: |
           export SCENARIO=${{ matrix.scenario }}
-          python3 flag_anomalies.py
+          for model in iforest ae cnn_lstm; do
+            export AI_MODEL=$model
+            echo "▶ Running detection: $model on $SCENARIO"
+            python3 flag_anomalies.py
+          done
 
-      - name: Upload anomaly results
+      - name: Upload AI anomaly results per model
+        run: |
+          for model in iforest ae cnn_lstm; do
+            name="ai_anomaly_result_${model}_${{ matrix.scenario }}"
+            mkdir -p "$name"
+            mv anomaly_result_${{ matrix.scenario }}.txt "$name/"
+            mv anomaly_plot_${{ matrix.scenario }}.png "$name/"
+            mv anomaly_result_log_${{ matrix.scenario }}.csv "$name/"
+            echo "Prepared folder: $name"
+          done
+
+      - name: Upload anomaly artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ai_anomaly_result_${{ matrix.scenario }}
+          name: ai_anomaly_results_${{ matrix.scenario }}
           path: |
-            anomaly_result_${{ matrix.scenario }}.txt
-            anomaly_plot_${{ matrix.scenario }}.png
+            ai_anomaly_result_iforest_${{ matrix.scenario }}
+            ai_anomaly_result_ae_${{ matrix.scenario }}
+            ai_anomaly_result_cnnlstm_${{ matrix.scenario }}
 
-      - name: Upload anomaly result log
-        uses: actions/upload-artifact@v4
-        with:
-          name: anomaly_result_log_${{ matrix.scenario }}
-          path: anomaly_result_log_${{ matrix.scenario }}.csv
 
 
       - name: Generate Evaluation Summary

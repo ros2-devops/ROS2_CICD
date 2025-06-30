@@ -1,81 +1,130 @@
 #!/usr/bin/env python3
 """
-AI-Powered Anomaly Detection & Logger (pipeline-aware)
-• Reads ros_metrics_<scenario>.csv  (6 feature columns produced by MetricsCollector)
-• Loads pipeline model (StandardScaler + IsolationForest)
-• Logs anomaly summary, plot, and structured CSV
+Unified AI-powered anomaly detector & logger
+────────────────────────────────────────────
+• Reads  ros_metrics_<SCENARIO>.csv  (6 feature columns)
+• Chooses the pipeline by `AI_MODEL` env  →  iforest | ae | cnn_lstm
+• All models + scaler live in   trained_models/
+• Writes
+      anomaly_result_<scenario>.txt
+      anomaly_plot_<scenario>.png
+      anomaly_result_log_<scenario>.csv   (appended)
 """
 
-import os, sys, pandas as pd, joblib, matplotlib.pyplot as plt
+import os, sys, joblib, numpy as np, pandas as pd, matplotlib.pyplot as plt
 from datetime import datetime
 
-# -------------------------------------------------------------------
-scenario      = os.getenv("SCENARIO", "unknown")
-csv_path      = f"ros_metrics_{scenario}.csv"
-model_path    = "anomaly_model_iforest.pkl"   # <- NEW model
-result_path   = f"anomaly_result_{scenario}.txt"
-plot_path     = f"anomaly_plot_{scenario}.png"
-log_path      = f"anomaly_result_log_{scenario}.csv"
+# ─────── runtime settings ─────────────────────────────────────────────
+scenario  = os.getenv("SCENARIO", "unknown")
+selector  = os.getenv("AI_MODEL", "cnn_lstm").lower()     # cnn_lstm | ae | iforest
+MODEL_DIR = "trained_models"                              # <── central folder
 
-feature_cols  = ["CPU","Mem","CPU_roll","CPU_slope","Mem_roll","Mem_slope"]
-# -------------------------------------------------------------------
+csv_path   = f"ros_metrics_{scenario}.csv"
+result_txt = f"anomaly_result_{scenario}.txt"
+plot_path  = f"anomaly_plot_{scenario}.png"
+log_path   = f"anomaly_result_log_{scenario}.csv"
 
-if not os.path.exists(csv_path):
-    sys.exit(f"{csv_path} not found")
+feature_cols = ["CPU", "Memory", "CPU_roll",
+                "CPU_slope", "Mem_roll", "Mem_slope"]
 
-# read – skip header row already present
+model_files = {
+    "cnn_lstm": ("trained_models/anomaly_model_cnnlstm.keras",
+                 "trained_models/cnn_lstm_threshold.pkl"),
+    "ae":       ("trained_models/anomaly_model_ae.keras",
+                 "trained_models/ae_threshold.pkl"),
+    "iforest":  ("trained_models/anomaly_model_iforest.pkl", None)
+}
+model_file, thresh_file = files.get(selector, files["cnn_lstm"])
+
+# ─────── path checks ──────────────────────────────────────────────────
+def need(path, msg):
+    if not os.path.exists(path):
+        sys.exit(msg)
+
+need(csv_path,   f"{csv_path} not found")
+need(MODEL_DIR, "trained_models/ folder missing — commit the pickles")
+
+model_path  = os.path.join(MODEL_DIR, model_file)
+need(model_path, f"{model_path} not found")
+
+scaler_path = "trained_models/scaler.pkl"
+need(scaler_path, "trained_models/scaler.pkl not found")
+
+if thresh_file:
+    thresh_path = os.path.join(MODEL_DIR, thresh_file)
+    need(thresh_path, f"{thresh_path} missing")
+
+# ─────── load + clean csv ─────────────────────────────────────────────
 df = pd.read_csv(csv_path, names=["Time"] + feature_cols, skiprows=1)
 
-# convert every feature col to float (handles stray strings)
-for c in feature_cols:
-    df[c] = pd.to_numeric(df[c], errors="coerce")
-df = df.dropna(subset=feature_cols)
+for col in feature_cols + ["Time"]:
+    df[col] = pd.to_numeric(df[col], errors="coerce")
+df = df.dropna(subset=feature_cols + ["Time"])
+if df.empty:
+    sys.exit("No valid rows after cleaning — aborting")
 
-# -------------------------------------------------------------------
-if not os.path.exists(model_path):
-    sys.exit(f"Model {model_path} not found")
+# ─────── scale features ───────────────────────────────────────────────
+scaler   = joblib.load(scaler_path)
+X_scaled = scaler.transform(df[feature_cols])
 
-pipe = joblib.load(model_path)
-df["anomaly"] = pipe.predict(df[feature_cols])
+# ─────── model-specific inference ─────────────────────────────────────
+if selector == "iforest":
+    model = joblib.load(model_path)
+    df["anomaly"] = model.predict(X_scaled)          # -1 = anomaly
 
-num_anom  = (df["anomaly"] == -1).sum()
-action    = "Investigate trend" if num_anom else "No action"
-anom_type = "CPU/Mem trends"    if num_anom else "None"
+else:  # Auto-Encoder or CNN-LSTM
+    model  = joblib.load(model_path)
+    thresh = float(joblib.load(thresh_path))
 
-# -------------------------------------------------------------------
-with open(result_path, "w") as f:
-    if num_anom:
-        f.write("ANOMALY DETECTED\n")
-        f.write(f"Count: {num_anom}\n")
-        f.write(f"Type: {anom_type}\n")
-        f.write(f"AI Action: {action}\n")
+    if selector == "cnn_lstm":
+        STEP = 30
+        pad  = STEP - (len(X_scaled) % STEP)
+        Xp   = np.vstack([X_scaled,
+                          np.tile(X_scaled[-1], (pad, 1))])
+        Xseq = Xp.reshape(-1, STEP, X_scaled.shape[1])
+        recon = model.predict(Xseq, verbose=0).reshape(-1, X_scaled.shape[1])[:len(X_scaled)]
+    else:                                   # auto-encoder
+        recon = model.predict(X_scaled, verbose=0)
+
+    errs = np.mean((recon - X_scaled) ** 2, axis=1)
+    df["anomaly"] = (errs > thresh).astype(int) * -1
+
+# ─────── summarise ────────────────────────────────────────────────────
+n_anom   = int((df["anomaly"] == -1).sum())
+p_anom   = n_anom / len(df) * 100
+has_anom = n_anom > 0
+action   = "Investigate trend" if has_anom else "No action"
+atype    = "Resource-trend"    if has_anom else "None"
+
+# plain-text
+with open(result_txt, "w") as f:
+    if has_anom:
+        f.write(f"ANOMALY DETECTED\nCount: {n_anom}\nShare: {p_anom:.2f} %\n"
+                f"Type:  {atype}\nAI Action: {action}\n")
     else:
         f.write("NO ANOMALY\nAI Action: No action\n")
+print("✓", result_txt)
 
-print(f"✓ {result_path}")
+# plot
+t, cpu  = df["Time"].to_numpy(), df["CPU"].to_numpy()
+mask    = df["anomaly"].to_numpy() == -1
 
-# ── Plot --------------------------------------------------------------
-t   = df["Time"].to_numpy()
-cpu = df["CPU"].to_numpy()
-anom_mask = df["anomaly"].to_numpy() == -1
-
-plt.figure()
-plt.plot(t, cpu, label="CPU %", lw=0.6)
-plt.scatter(t[anom_mask], cpu[anom_mask],
-            c="red", s=8, label="Anomaly", zorder=5)
-plt.title(f"CPU Anomalies – {scenario}")
-plt.xlabel("Time (s)"); plt.ylabel("CPU (%)"); plt.legend()
+plt.figure(figsize=(8,3))
+plt.plot(t, cpu, lw=0.6, label="CPU %")
+plt.scatter(t[mask], cpu[mask], c="red", s=8, zorder=5, label="Anomaly")
+plt.title(f"CPU anomalies – {scenario} ({selector})")
+plt.xlabel("Time (s)"); plt.ylabel("CPU %"); plt.legend()
 plt.tight_layout(); plt.savefig(plot_path)
-print(f"✓ {plot_path}")
+print("✓", plot_path)
 
+# csv log
+ts     = datetime.now().isoformat()
+header = "Timestamp,Scenario,Model,AnomalyCount,AnomalyPct,AI_Action\n"
+row    = f"{ts},{scenario},{selector},{n_anom},{p_anom:.2f},{action}\n"
 
-# Append structured log
-ts = datetime.now().isoformat()
-header = "Timestamp,Scenario,AnomalyCount,AnomalyType,AI_Action\n"
-line   = f"{ts},{scenario},{num_anom},{anom_type},{action}\n"
-
-need_header = not os.path.exists(log_path)
+write_head = not os.path.exists(log_path)
 with open(log_path, "a") as f:
-    if need_header: f.write(header)
-    f.write(line)
-print(f"✓ {log_path} updated")
+    if write_head:
+        f.write(header)
+    f.write(row)
+print("✓", log_path, "updated")
