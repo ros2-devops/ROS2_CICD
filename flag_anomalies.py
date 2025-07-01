@@ -74,7 +74,7 @@ if selector == "iforest":
     model = joblib.load(model_path)
     df["anomaly"] = model.predict(X_scaled)          # -1 = anomaly
 
-else:  # Auto-Encoder or CNN-LSTM
+else:
     model  = load_model(model_path)
     thresh = float(joblib.load(thresh_path))
 
@@ -85,11 +85,13 @@ else:  # Auto-Encoder or CNN-LSTM
                           np.tile(X_scaled[-1], (pad, 1))])
         Xseq = Xp.reshape(-1, STEP, X_scaled.shape[1])
         recon = model.predict(Xseq, verbose=0).reshape(-1, X_scaled.shape[1])[:len(X_scaled)]
-    else:
-        recon = model.predict(X_scaled, verbose=0)
 
-    errs = np.mean((recon - X_scaled) ** 2, axis=1)
-    df["anomaly"] = (errs > thresh).astype(int) * -1
+    else:  # auto-encoder expects shape (batch, 20, 6)
+        X3D = X_scaled.reshape(-1, 20, X_scaled.shape[1])
+        recon = model.predict(X3D, verbose=0).reshape(-1, X_scaled.shape[1])
+        # match recon length in case padding is needed
+        recon = recon[:len(X_scaled)]
+
 
 
 # ─────── summarise ────────────────────────────────────────────────────
