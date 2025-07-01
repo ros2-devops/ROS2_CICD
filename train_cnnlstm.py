@@ -36,9 +36,20 @@ recon = model.predict(X_val, verbose=0)
 mse   = np.mean(np.square(X_val - recon), axis=(1,2))
 th    = np.percentile(mse, 95)
 
-joblib.dump({"scaler": scaler,
-             "model" : model,
-             "thresh": th,
-             "window": win},
-            "anomaly_model_cnnlstm.pkl")
-print("CNN-LSTM saved. 95-th-pct threshold =", th)
+# ── compute 95-th-percentile threshold ────────────────────────────────
+recon = model.predict(X_val, verbose=0)
+mse   = np.mean(np.square(X_val - recon), axis=(1, 2))
+th    = np.percentile(mse, 95)
+
+# ── ensure output dir ─────────────────────────────────────────────────
+os.makedirs("trained_models", exist_ok=True)
+
+# 1) save model in native Keras format  → *.keras
+model_path   = "trained_models/anomaly_model_cnnlstm.keras"
+model.save(model_path)
+
+# 2) save threshold separately          → *.pkl
+joblib.dump(th, "trained_models/cnn_lstm_threshold.pkl")
+
+print(f"✓ CNN-LSTM saved → {model_path}")
+print("   95-th-pct threshold =", th)
