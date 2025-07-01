@@ -121,7 +121,7 @@ jobs:
           path: |
             ai_anomaly_result_iforest_${{ matrix.scenario }}
             ai_anomaly_result_ae_${{ matrix.scenario }}
-            ai_anomaly_result_cnnlstm_${{ matrix.scenario }}
+            ai_anomaly_result_cnn_lstm_${{ matrix.scenario }}
 
 
 
