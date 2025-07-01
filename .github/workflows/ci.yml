@@ -36,17 +36,12 @@ jobs:
 
           sudo snap install webots --classic
 
-      - name: Use Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
 
       - name: Install Python deps
         run: |
           pip3 install --no-cache-dir --upgrade \
               "numpy<2.0" "scipy<1.25" \
-              pandas scikit-learn joblib matplotlib \
-              "tensorflow==2.15.*"
+              pandas scikit-learn joblib matplotlib tensorflow keras
 
 
 
