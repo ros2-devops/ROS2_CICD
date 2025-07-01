@@ -68,12 +68,14 @@ scaler   = joblib.load(scaler_path)
 X_scaled = scaler.transform(df[feature_cols])
 
 # ─────── model-specific inference ─────────────────────────────────────
+from tensorflow.keras.models import load_model
+
 if selector == "iforest":
     model = joblib.load(model_path)
     df["anomaly"] = model.predict(X_scaled)          # -1 = anomaly
 
 else:  # Auto-Encoder or CNN-LSTM
-    model  = joblib.load(model_path)
+    model  = load_model(model_path)
     thresh = float(joblib.load(thresh_path))
 
     if selector == "cnn_lstm":
@@ -83,11 +85,12 @@ else:  # Auto-Encoder or CNN-LSTM
                           np.tile(X_scaled[-1], (pad, 1))])
         Xseq = Xp.reshape(-1, STEP, X_scaled.shape[1])
         recon = model.predict(Xseq, verbose=0).reshape(-1, X_scaled.shape[1])[:len(X_scaled)]
-    else:                                   # auto-encoder
+    else:
         recon = model.predict(X_scaled, verbose=0)
 
     errs = np.mean((recon - X_scaled) ** 2, axis=1)
     df["anomaly"] = (errs > thresh).astype(int) * -1
+
 
 # ─────── summarise ────────────────────────────────────────────────────
 n_anom   = int((df["anomaly"] == -1).sum())
