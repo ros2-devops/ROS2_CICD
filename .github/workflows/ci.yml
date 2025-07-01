@@ -108,9 +108,9 @@ jobs:
           for model in iforest ae cnn_lstm; do
             name="ai_anomaly_result_${model}_${{ matrix.scenario }}"
             mkdir -p "$name"
-            mv anomaly_result_${{ matrix.scenario }}.txt "$name/"
-            mv anomaly_plot_${{ matrix.scenario }}.png "$name/"
-            mv anomaly_result_log_${{ matrix.scenario }}.csv "$name/"
+            mv anomaly_result_${model}_${{ matrix.scenario }}.txt "$name/"
+            mv anomaly_plot_${model}_${{ matrix.scenario }}.png "$name/"
+            mv anomaly_result_log_${model}_${{ matrix.scenario }}.csv "$name/"
             echo "Prepared folder: $name"
           done
 

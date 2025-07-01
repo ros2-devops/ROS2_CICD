@@ -21,9 +21,9 @@ selector  = os.getenv("AI_MODEL", "cnn_lstm").lower()        # cnn_lstm | ae | i
 MODEL_DIR = "trained_models"
 
 csv_path   = f"ros_metrics_{scenario}.csv"
-result_txt = f"anomaly_result_{scenario}.txt"
-plot_path  = f"anomaly_plot_{scenario}.png"
-log_path   = f"anomaly_result_log_{scenario}.csv"
+result_txt = f"anomaly_result_{selector}_{scenario}.txt"
+plot_path  = f"anomaly_plot_{selector}_{scenario}.png"
+log_path   = f"anomaly_result_log_{selector}_{scenario}.csv"
 
 feature_cols = ["CPU", "Memory", "CPU_roll",
                 "CPU_slope", "Mem_roll", "Mem_slope"]
