@@ -41,7 +41,7 @@ jobs:
           pip3 install --no-cache-dir --upgrade \
               "numpy<2.0" "scipy<1.25" \
               pandas scikit-learn joblib matplotlib \
-              "tensorflow-cpu==2.15.*"
+              "tensorflow==2.15.*"
           # ensure no stray Keras-3 sneaks in
           pip3 uninstall -y keras keras-nightly keras-Preprocessing || true
 
