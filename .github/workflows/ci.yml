@@ -36,7 +36,7 @@ jobs:
 
           sudo snap install webots --classic
 
-          pip3 install "numpy<2.0" pandas scikit-learn joblib matplotlib tensorflow-cpu==2.15.0
+          pip3 install "numpy<2.0" pandas scikit-learn joblib matplotlib "tensorflow-cpu==2.15.*" "keras==2.15.*"
 
 
 
