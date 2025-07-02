@@ -102,6 +102,22 @@ jobs:
             echo "▶ Running detection: $model on $SCENARIO"
             python3 flag_anomalies.py
           done
+          
+      - name: Compare detectors & pick best
+        run: |
+          export SCENARIO=${{ matrix.scenario }}
+          python3 ci/compare_models.py
+          cat best_model_${{ matrix.scenario }}.txt
+          # surface in job summary
+          echo "### ${SCENARIO}: $(cat best_model_${{ matrix.scenario }}.txt)" >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload best-model artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: best_model_${{ matrix.scenario }}
+          path: |
+            best_model_${{ matrix.scenario }}.txt
+            best_model_${{ matrix.scenario }}.md
 
       - name: Upload AI anomaly results per model
         run: |
@@ -142,16 +158,12 @@ jobs:
           name: evaluation_log_${{ matrix.scenario }}
           path: evaluation_log_${{ matrix.scenario }}.csv
 
-
-
   docker:
     needs: simulate
     if: needs.simulate.outputs.result == 'PASS'
     runs-on: ubuntu-22.04
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
@@ -159,8 +171,16 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push Docker image
+      # ── main robot image ─────────────────────────────
+      - name: Build & push runtime image
         run: |
-          IMAGE_NAME=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/ros2_cicd:latest
-          docker build -t "$IMAGE_NAME" .
-          docker push "$IMAGE_NAME"
+          IMG=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/ros2_cicd:latest
+          docker build -t "$IMG" .
+          docker push "$IMG"
+
+      # ── ❶ dashboard image ───────────────────────────
+      - name: Build & push dashboard image
+        run: |
+          IMG=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/ros2_cicd:dash
+          docker build -f Dockerfile --target dashboard -t "$IMG" .
+          docker push "$IMG"
