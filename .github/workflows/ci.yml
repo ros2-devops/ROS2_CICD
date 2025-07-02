@@ -12,7 +12,7 @@ jobs:
       result: ${{ steps.run_sim.outputs.result }}
     strategy:
       matrix:
-        scenario: [demo1, demo2]
+        scenario: [demo1, demo2, arena, maze, dynamic, multibot]
 
     steps:
       - name: Checkout repository
