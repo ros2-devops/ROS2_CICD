@@ -119,3 +119,29 @@ Heron {
   rotation -0.00040473384668264804 -0.029653153639982166 -0.9995601666081523 0.027308176523216297
   name "heron(2)"
 }
+
+TurtleBot3Burger {
+  translation -1 0.5 0.05
+  name "bot1"
+  controller "slam_node"
+  children [
+    Laser {
+      name "laser"
+    }
+  ]
+}
+
+TurtleBot3Burger {
+  translation 1 -0.5 0.05
+  name "bot2"
+  controller "hog"
+  children [
+    Camera {
+      name "high_res_camera"
+      width 1280
+      height 720
+      fieldOfView 1.57
+      near 0.01
+    }
+  ]
+}

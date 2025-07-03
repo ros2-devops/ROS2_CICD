@@ -241,7 +241,7 @@ DEF MAZE_WALLS Group {
 DEF THYMIO2 Thymio2 {
   translation -0.279509 0.02923 0.610695
   rotation 0.0014800006661173696 0.9997794499798363 0.020949009428711335 -0.014665
-  controller "slam_node"
+  controller "move_in_maze"
 }
 MazeRunnerBenchmark {
 }
@@ -534,4 +534,30 @@ Laptop {
   rotation 0.0008149997293284472 0 0.9999996678876654 -3.141593
   name "laptop(1)"
   controller "<none>"
+}
+
+TurtleBot3Burger {
+  translation -1 0.5 0.05
+  name "bot1"
+  controller "slam_node"
+  children [
+    Laser {
+      name "laser"
+    }
+  ]
+}
+
+TurtleBot3Burger {
+  translation 1 -0.5 0.05
+  name "bot2"
+  controller "hog"
+  children [
+    Camera {
+      name "high_res_camera"
+      width 1280
+      height 720
+      fieldOfView 1.57
+      near 0.01
+    }
+  ]
 }
