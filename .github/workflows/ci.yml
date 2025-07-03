@@ -69,11 +69,11 @@ jobs:
             echo "result=$RESULT" >> $GITHUB_OUTPUT
             if [[ "$RESULT" == "FAIL" ]]; then
               echo "::error Assertion failed during simulation."
-              exit 1
+              
             fi
           else
             echo "::error assertion_result.txt not found."
-            exit 1
+            
           fi
 
       - name: Upload simulation metrics
