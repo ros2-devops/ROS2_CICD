@@ -16,7 +16,7 @@ SCENARIO = os.getenv("SCENARIO", "unknown")
 
 rows = []  # [(model, count, pct)]
 for log in glob.glob(f"anomaly_result_log_*_{SCENARIO}.csv"):
-    model = log.split("_")[3]        # anomaly_result_log_<model>_<scen>.csv
+    model = log.replace("anomaly_result_log_", "").replace(f"_{SCENARIO}.csv", "")
     with open(log) as f:
         last = list(csv.reader(f))[-1]        # correct: convert to list, get last row
     parts = last
