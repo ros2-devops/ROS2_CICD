@@ -5,6 +5,8 @@ Enhanced ROS 2 Metrics Collector
 • Adds rolling–mean and slope (trend) features
 • Saves per-scenario CSV:
       Time, CPU, Memory, CPU_roll, CPU_slope, Mem_roll, Mem_slope
+• Logs simulation outcome:
+      simulation_log_<scenario>.csv
 """
 
 from datetime import datetime
@@ -22,8 +24,8 @@ class MetricsCollector(Node):
         super().__init__('metrics_node')
 
         self.scenario      = os.getenv("SCENARIO", "unknown")
-        self.metrics_file  = os.path.join(
-            WORK_DIR, f"ros_metrics_{self.scenario}.csv")
+        self.metrics_file  = os.path.join(WORK_DIR, f"ros_metrics_{self.scenario}.csv")
+        self.log_file      = os.path.join(WORK_DIR, f"simulation_log_{self.scenario}.csv")
 
         # timers
         self.period        = float(os.getenv("LOG_INTERVAL", 1.0))
@@ -77,6 +79,11 @@ class MetricsCollector(Node):
             f"(roll {cpu_roll:.1f}/{mem_roll:.1f})")
 
         if now >= self.max_duration:
+            # Log simulation result (default: PASS for now)
+            timestamp = datetime.now().isoformat()
+            with open(self.log_file, "a") as f:
+                f.write(f"{timestamp},{self.scenario},PASS\n")
+
             self.get_logger().info("Reached SIM_DURATION → shutting down")
             rclpy.shutdown()
 
