@@ -32,7 +32,7 @@ def generate_launch_description():
                 cmd=[
                     "webots",
                     "--stdout",
-                    "--batch",
+                    "--no-rendering",
                     world_path,
                 ],
                 additional_env={
