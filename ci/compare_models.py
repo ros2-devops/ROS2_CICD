@@ -19,7 +19,7 @@ for log in glob.glob(f"anomaly_result_log_*_{SCENARIO}.csv"):
     model = log.split("_")[3]        # anomaly_result_log_<model>_<scen>.csv
     with open(log) as f:
         last = list(csv.reader(f))[-1]        # correct: convert to list, get last row
-    parts = last.strip().split(",")
+    parts = last
     rows.append((model, int(parts[3]), float(parts[4])))
 
 if not rows:
