@@ -409,5 +409,5 @@ DEF ROBOT Robot {
       0 0 0
     ]
   }
-  controller "physics"
+  controller "hog"
 }
