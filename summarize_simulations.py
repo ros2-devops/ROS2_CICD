@@ -1,103 +1,75 @@
 #!/usr/bin/env python3
-"""
-Summarise simulation results + AI anomaly context
-─────────────────────────────────────────────────
-Reads:
-  simulation_log_<scenario>.csv
-  ros_metrics_<scenario>.csv   (7-column version)
-  anomaly_result_log_<scenario>.csv   (optional)
-
-Writes:
-  evaluation_summary_<scenario>.txt
-  evaluation_log_<scenario>.csv   (appended)
-"""
-
 import os, sys
 import pandas as pd
 from datetime import datetime
 
 scenario = os.getenv("SCENARIO", "unknown")
-
-# ── paths ──────────────────────────────────────────────
 log_path      = f"simulation_log_{scenario}.csv"
 metrics_path  = f"ros_metrics_{scenario}.csv"
 anomaly_path  = f"anomaly_result_log_{scenario}.csv"
 summary_path  = f"evaluation_summary_{scenario}.txt"
+summary_csv   = f"evaluation_summary_{scenario}.csv"
 eval_log_path = f"evaluation_log_{scenario}.csv"
 
 for p in (log_path, metrics_path):
     if not os.path.exists(p):
         print(f"{p} not found"); sys.exit(1)
 
-# ── load CSVs ──────────────────────────────────────────
-log_df = pd.read_csv(log_path, header=None,
-                     names=["timestamp", "scenario", "result"])
-
-# metrics collector writes a header row – keep it
-names = ["Time","CPU","Memory",
-         "CPU_roll","CPU_slope","Mem_roll","Mem_slope"]
+log_df = pd.read_csv(log_path)
+names = ["Time","CPU","Memory","CPU_roll","CPU_slope","Mem_roll","Mem_slope"]
 metrics_df = (pd.read_csv(metrics_path, names=names, header=0)
                 .apply(pd.to_numeric, errors='coerce')
                 .dropna())
 
-if os.path.exists(anomaly_path):
-    an_df = pd.read_csv(anomaly_path)
-    an_sc = an_df[an_df["Scenario"] == scenario]
-    latest_an = an_sc.iloc[-1] if not an_sc.empty else None
-else:
-    latest_an = None
+an_df = pd.read_csv(anomaly_path) if os.path.exists(anomaly_path) else pd.DataFrame()
 
-# ── basic stats ───────────────────────────────────────
+# Basic stats
 total_runs = len(log_df)
-pass_cnt   = (log_df["result"] == "PASS").sum()
+pass_cnt   = (log_df["Result"] == "PASS").sum()
 fail_cnt   = total_runs - pass_cnt
-
-avg_cpu  = metrics_df["CPU"].mean()
-max_cpu  = metrics_df["CPU"].max()
-avg_mem  = metrics_df["Memory"].mean()
-max_mem  = metrics_df["Memory"].max()
-
+avg_cpu    = metrics_df["CPU"].mean()
+max_cpu    = metrics_df["CPU"].max()
+avg_mem    = metrics_df["Memory"].mean()
+max_mem    = metrics_df["Memory"].max()
 avg_cpu_slope = metrics_df["CPU_slope"].mean()
 avg_mem_slope = metrics_df["Mem_slope"].mean()
+latest_an     = an_df[an_df["Scenario"] == scenario].iloc[-1] if not an_df.empty else None
 
-# ── compose summary ───────────────────────────────────
 lines = [
     "Simulation Evaluation Summary",
     f"Generated: {datetime.now().isoformat()}",
-    "",
-    f"Runs recorded: {total_runs}   PASS: {pass_cnt}   FAIL: {fail_cnt}",
-    "",
-    "CPU:",
-    f"   Avg {avg_cpu:6.2f} %   Max {max_cpu:5.1f} %",
-    f"   Avg slope {avg_cpu_slope:+.3f} %/s"
-    + ("  ⚠ upward trend" if avg_cpu_slope > 0.2 else ""),
-    "Memory:",
-    f"   Avg {avg_mem:6.2f} %   Max {max_mem:5.1f} %",
-    f"   Avg slope {avg_mem_slope:+.3f} %/s"
-    + ("  ⚠ upward trend" if avg_mem_slope > 0.2 else ""),
-    "",
-    f"Stability: {'Stable' if fail_cnt == 0 else 'Unstable (failures detected)'}"
+    f"Runs: {total_runs}  Pass: {pass_cnt}  Fail: {fail_cnt}",
+    f"Avg CPU: {avg_cpu:.2f}%  Max CPU: {max_cpu:.1f}%",
+    f"Avg slope CPU: {avg_cpu_slope:+.3f}",
+    f"Avg Mem: {avg_mem:.2f}%  Max Mem: {max_mem:.1f}%",
+    f"Avg slope Mem: {avg_mem_slope:+.3f}",
+    f"Stability: {'Stable' if fail_cnt == 0 else 'Unstable'}"
 ]
-
 if latest_an is not None:
-    lines += ["", "AI-Detected Anomalies:"]
-    for key in ["AnomalyCount", "AnomalyType", "AI_Action"]:
-        val = latest_an.get(key, "N/A")
-        lines.append(f"   {key.replace('_', ' '):<8}: {val}")
+    lines += [
+        f"AI: {latest_an['Model']} - {latest_an['AnomalyCount']} anomalies "
+        f"({latest_an['AnomalyPct']}%)"
+    ]
 
-
-summary_text = "\n".join(lines)
-
-# ── write files ───────────────────────────────────────
 with open(summary_path, "w") as f:
-    f.write(summary_text)
+    f.write("\n".join(lines))
 
-append_header = (not os.path.exists(eval_log_path)
-                 or os.stat(eval_log_path).st_size == 0)
+pd.DataFrame([{
+    "Timestamp": datetime.now().isoformat(),
+    "Scenario": scenario,
+    "Passes": pass_cnt,
+    "Fails": fail_cnt,
+    "Avg_CPU": round(avg_cpu, 2),
+    "Max_CPU": round(max_cpu, 1),
+    "Avg_Mem": round(avg_mem, 2),
+    "Max_Mem": round(max_mem, 1),
+    "CPU_Slope": round(avg_cpu_slope, 3),
+    "Mem_Slope": round(avg_mem_slope, 3),
+    "AI_Model": latest_an["Model"] if latest_an is not None else "N/A",
+    "AnomalyCount": latest_an["AnomalyCount"] if latest_an is not None else "N/A"
+}]).to_csv(summary_csv, index=False)
+
 with open(eval_log_path, "a") as f:
-    if append_header:
-        f.write("Timestamp,Scenario,Summary\n")
-    compact = summary_text.replace("\n", " | ")
-    f.write(f"{datetime.now().isoformat()},{scenario},\"{compact}\"\n")
+    f.write(f"{datetime.now().isoformat()},{scenario},\"{'; '.join(lines)}\"\n")
 
-print(f"[OK] {summary_path} written and log appended.")
+print(f"[OK] {summary_path} and {summary_csv} written")
