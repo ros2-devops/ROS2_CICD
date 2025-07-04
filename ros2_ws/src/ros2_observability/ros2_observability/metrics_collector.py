@@ -55,10 +55,9 @@ class MetricsCollector(Node):
                 wr = csv.writer(f)
                 wr.writerow([f"# scenario={self.scenario}",
                              f"# generated={datetime.now().isoformat()}"])
-                wr.writerow(["Time","CPU","Memory",
-                             "CPU_mean","CPU_slope",
-                             "Mem_mean","Mem_slope",
-                             "CPU_viol","Mem_viol"])
+                wr.writerow(["Time", "CPU", "Memory",
+                            "CPU_roll", "CPU_slope",
+                            "Mem_roll", "Mem_slope"])
         if not os.path.exists(self.simlog_file):
             with open(self.simlog_file, "w") as f:
                 f.write("Timestamp,Scenario,Result,CPU_violations,"
@@ -87,8 +86,8 @@ class MetricsCollector(Node):
         with open(self.metrics_file, "a", newline="") as f:
             csv.writer(f).writerow([
                 round(now,3), cpu, mem,
-                round(cpu_mean,2), round(cpu_slope,4),
-                round(mem_mean,2), round(mem_slope,4),
+                round(cpu_roll,2), round(cpu_slope,3),
+                round(mem_roll,2), round(mem_slope,3),
                 self.cpu_viol, self.mem_viol
             ])
 
@@ -120,4 +119,4 @@ def main(argv=None) -> None:
         pass
 
 if __name__ == "__main__":
-    main()
+    main()  

@@ -157,6 +157,15 @@ jobs:
         with:
           name: evaluation_log_${{ matrix.scenario }}
           path: evaluation_log_${{ matrix.scenario }}.csv
+      - name: Upload to Dashboard VM
+        if: always()
+        env:
+          VM_USER: ec24136
+          VM_HOST: 34.89.44.176
+        run: |
+          scp evaluation_summary_*.txt best_model_*.md anomaly_result_log_* *.png \
+              $VM_USER@$VM_HOST:~/ROS2_CICD/dashboard_artifacts/
+
 
   docker:
     needs: simulate
