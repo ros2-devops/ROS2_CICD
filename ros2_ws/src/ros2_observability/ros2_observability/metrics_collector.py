@@ -74,7 +74,9 @@ class MetricsCollector(Node):
         if len(self.cpu_hist) > int(WIN_SEC / self.period) + 1:
             self.cpu_hist.pop(0);   self.mem_hist.pop(0)
 
-        cpu_mean, mem_mean = np.mean(self.cpu_hist), np.mean(self.mem_hist)
+        cpu_roll = np.mean(self.cpu_hist)
+        mem_roll = np.mean(self.mem_hist)
+
         cpu_slope = (self.cpu_hist[-1] - self.cpu_hist[0]) / len(self.cpu_hist)
         mem_slope = (self.mem_hist[-1] - self.mem_hist[0]) / len(self.mem_hist)
 
