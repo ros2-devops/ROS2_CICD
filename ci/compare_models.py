@@ -1,42 +1,48 @@
 #!/usr/bin/env python3
 """
-Pick the best detector for one SCENARIO.
-Rules (keep it simple first):
-    •   lowest AnomalyCount wins
-    •   tie → prefer: iforest  >  ae  >  cnn_lstm
-Outputs
-    best_model_<scenario>.txt   (one-liner)
-    best_model_<scenario>.md    (pretty table for dashboard / summary)
+Select the ‘best’ anomaly-detector model *per scenario*.
+
+Ranking = 1) fewer anomalies  2) deterministic priority
+Priority order:  iforest  <  ae  <  cnn_lstm   (0 = best).
+
+Produces
+  best_model_<scenario>.txt   (single line machine-readable)
+  best_model_<scenario>.md    (pretty Markdown table)
 """
 
-import glob, csv, sys, os, json
+import glob, csv, sys, os
 from pathlib import Path
+from datetime import datetime
 
 SCENARIO = os.getenv("SCENARIO", "unknown")
+logs = sorted(glob.glob(f"anomaly_result_log_*_{SCENARIO}.csv"))
+if not logs:
+    sys.exit(f"No anomaly logs found for {SCENARIO}")
 
-rows = []  # [(model, count, pct)]
-for log in glob.glob(f"anomaly_result_log_*_{SCENARIO}.csv"):
-    model = log.replace("anomaly_result_log_", "").replace(f"_{SCENARIO}.csv", "")
+rows = []
+for log in logs:
+    model = log.split("_", 3)[2]        # anomaly_result_log_<model>_<scenario>.csv
     with open(log) as f:
-        last = list(csv.reader(f))[-1]        # correct: convert to list, get last row
-    parts = last
-    rows.append((model, int(parts[3]), float(parts[4])))
+        *_, last = list(csv.reader(f))   # last non-header row
+    rows.append((model, int(last[3]), float(last[4])))
 
-if not rows:
-    sys.exit("No logs found!")
-
-# sort by count, then our manual priority
 priority = {"iforest": 0, "ae": 1, "cnn_lstm": 2}
-rows.sort(key=lambda r: (r[1], priority[r[0]]))
+rows.sort(key=lambda r: (r[1], priority.get(r[0], 9)))
 best = rows[0]
 
-# ---------- write artifacts ----------
-txt = f"best={best[0]}  anomalies={best[1]} ({best[2]} %)\n"
-Path(f"best_model_{SCENARIO}.txt").write_text(txt)
+# ─── write artifacts ────────────────────────────────────────────────
+ts = datetime.now().isoformat()
+Path(f"best_model_{SCENARIO}.txt").write_text(
+    f"{ts}  best={best[0]}  anomalies={best[1]}  pct={best[2]:.2f}\n"
+)
 
-md  = "|Model|Anoms|Pct|\n|---|---|---|\n" + \
-      "\n".join(f"|{m}|{c}|{p:.2f} %|" for m,c,p in rows) + "\n" + \
-      f"\n**Best → `{best[0]}`**\n"
-Path(f"best_model_{SCENARIO}.md").write_text(md)
+md_lines = [
+    f"*Model selection for* **`{SCENARIO}`**  — {ts}",
+    "", "| Model | # Anoms | % | Rank |", "|---|---:|---:|---:|"
+]
+for rank, (m,c,p) in enumerate(rows, 1):
+    md_lines.append(f"| {m} | {c} | {p:.2f}% | {rank} |")
+md_lines += ["", f"**Winner → `{best[0]}`**"]
 
-print(txt.strip())
+Path(f"best_model_{SCENARIO}.md").write_text("\n".join(md_lines))
+print(f"✔ Best model: {best[0]}  (anoms={best[1]})")

@@ -1,103 +1,79 @@
 #!/usr/bin/env python3
 """
-Summarise simulation results + AI anomaly context
-─────────────────────────────────────────────────
-Reads:
-  simulation_log_<scenario>.csv
-  ros_metrics_<scenario>.csv   (7-column version)
-  anomaly_result_log_<scenario>.csv   (optional)
-
-Writes:
-  evaluation_summary_<scenario>.txt
-  evaluation_log_<scenario>.csv   (appended)
+Simulation & AI-Anomaly Evaluation Summary
+──────────────────────────────────────────
+Generates a *stand-alone* textual digest + appends a CSV
+row for longitudinal tracking across runs.
 """
 
-import os, sys
-import pandas as pd
+from __future__ import annotations
+import os, sys, pandas as pd
 from datetime import datetime
+from statistics import median
 
 scenario = os.getenv("SCENARIO", "unknown")
 
-# ── paths ──────────────────────────────────────────────
-log_path      = f"simulation_log_{scenario}.csv"
-metrics_path  = f"ros_metrics_{scenario}.csv"
-anomaly_path  = f"anomaly_result_log_{scenario}.csv"
-summary_path  = f"evaluation_summary_{scenario}.txt"
-eval_log_path = f"evaluation_log_{scenario}.csv"
+paths = {
+    "sim":   f"simulation_log_{scenario}.csv",
+    "met":   f"ros_metrics_{scenario}.csv",
+    "anom":  f"anomaly_result_log_{scenario}.csv",
+    "sum":   f"evaluation_summary_{scenario}.txt",
+    "elog":  "evaluation_log.csv"
+}
+for k,p in paths.items():
+    if k != "anom" and not os.path.exists(p):
+        sys.exit(f"Missing required input: {p}")
 
-for p in (log_path, metrics_path):
-    if not os.path.exists(p):
-        print(f"{p} not found"); sys.exit(1)
+# ─── ingest ─────────────────────────────────────────────────────────
+sim_df = pd.read_csv(paths["sim"],
+                     names=["ts","scenario","res","cpu_v","mem_v","maxCPU","maxMem"],
+                     header=0)
 
-# ── load CSVs ──────────────────────────────────────────
-log_df = pd.read_csv(log_path, header=None,
-                     names=["timestamp", "scenario", "result"])
+met_names = ["Time","CPU","Memory","CPU_mean","CPU_slope",
+             "Mem_mean","Mem_slope","CPU_viol","Mem_viol"]
+met_df = pd.read_csv(paths["met"], names=met_names, skiprows=2)
 
-# metrics collector writes a header row – keep it
-names = ["Time","CPU","Memory",
-         "CPU_roll","CPU_slope","Mem_roll","Mem_slope"]
-metrics_df = (pd.read_csv(metrics_path, names=names, header=0)
-                .apply(pd.to_numeric, errors='coerce')
-                .dropna())
+anom_df = (pd.read_csv(paths["anom"])
+           if os.path.exists(paths["anom"]) else pd.DataFrame())
 
-if os.path.exists(anomaly_path):
-    an_df = pd.read_csv(anomaly_path)
-    an_sc = an_df[an_df["Scenario"] == scenario]
-    latest_an = an_sc.iloc[-1] if not an_sc.empty else None
-else:
-    latest_an = None
+# ─── stats ──────────────────────────────────────────────────────────
+runs = len(sim_df)
+pass_rate = (sim_df["res"]=="PASS").mean()*100
+p95_cpu = met_df["CPU"].quantile(0.95)
+p99_mem = met_df["Memory"].quantile(0.99)
+trend_cpu = met_df["CPU_slope"].mean()
+trend_mem = met_df["Mem_slope"].mean()
 
-# ── basic stats ───────────────────────────────────────
-total_runs = len(log_df)
-pass_cnt   = (log_df["result"] == "PASS").sum()
-fail_cnt   = total_runs - pass_cnt
-
-avg_cpu  = metrics_df["CPU"].mean()
-max_cpu  = metrics_df["CPU"].max()
-avg_mem  = metrics_df["Memory"].mean()
-max_mem  = metrics_df["Memory"].max()
-
-avg_cpu_slope = metrics_df["CPU_slope"].mean()
-avg_mem_slope = metrics_df["Mem_slope"].mean()
-
-# ── compose summary ───────────────────────────────────
-lines = [
-    "Simulation Evaluation Summary",
+summary = [
+    f"Evaluation Summary – scenario: **{scenario}**",
     f"Generated: {datetime.now().isoformat()}",
     "",
-    f"Runs recorded: {total_runs}   PASS: {pass_cnt}   FAIL: {fail_cnt}",
-    "",
-    "CPU:",
-    f"   Avg {avg_cpu:6.2f} %   Max {max_cpu:5.1f} %",
-    f"   Avg slope {avg_cpu_slope:+.3f} %/s"
-    + ("  ⚠ upward trend" if avg_cpu_slope > 0.2 else ""),
-    "Memory:",
-    f"   Avg {avg_mem:6.2f} %   Max {max_mem:5.1f} %",
-    f"   Avg slope {avg_mem_slope:+.3f} %/s"
-    + ("  ⚠ upward trend" if avg_mem_slope > 0.2 else ""),
-    "",
-    f"Stability: {'Stable' if fail_cnt == 0 else 'Unstable (failures detected)'}"
+    f"Runs     : {runs}  ·  PASS rate {pass_rate:.1f} %",
+    f"CPU      : μ {met_df['CPU'].mean():.2f}%  · P95 {p95_cpu:.1f}%"
+    f"  · trend {trend_cpu:+.3f}%/s",
+    f"Memory   : μ {met_df['Memory'].mean():.2f}%  · P99 {p99_mem:.1f}%"
+    f"  · trend {trend_mem:+.3f}%/s",
 ]
 
-if latest_an is not None:
-    lines += ["", "AI-Detected Anomalies:"]
-    for key in ["AnomalyCount", "AnomalyType", "AI_Action"]:
-        val = latest_an.get(key, "N/A")
-        lines.append(f"   {key.replace('_', ' '):<8}: {val}")
+if not anom_df.empty:
+    last = anom_df.iloc[-1]
+    summary += [
+        "",
+        "AI Anomaly-detector:",
+        f"model={last['Model']}  ·  count={last['AnomalyCount']}  "
+        f"({last['AnomalyPct']} %)",
+        f"action={last['AI_Action']}"
+    ]
 
+# ─── write outputs ──────────────────────────────────────────────────
+with open(paths["sum"],"w") as f: f.write("\n".join(summary))
+print(f"✔ summary → {paths['sum']}")
 
-summary_text = "\n".join(lines)
-
-# ── write files ───────────────────────────────────────
-with open(summary_path, "w") as f:
-    f.write(summary_text)
-
-append_header = (not os.path.exists(eval_log_path)
-                 or os.stat(eval_log_path).st_size == 0)
-with open(eval_log_path, "a") as f:
-    if append_header:
-        f.write("Timestamp,Scenario,Summary\n")
-    compact = summary_text.replace("\n", " | ")
-    f.write(f"{datetime.now().isoformat()},{scenario},\"{compact}\"\n")
-
-print(f"[OK] {summary_path} written and log appended.")
+# append global evaluation_log.csv
+is_new = not os.path.exists(paths["elog"])
+with open(paths["elog"],"a") as f:
+    if is_new:
+        f.write("Timestamp,Scenario,Runs,PassRate,CPU_P95,Mem_P99\n")
+    f.write(f"{datetime.now().isoformat()},{scenario},{runs},"
+            f"{pass_rate:.1f},{p95_cpu:.1f},{p99_mem:.1f}\n")
+print("✔ evaluation_log.csv appended")
