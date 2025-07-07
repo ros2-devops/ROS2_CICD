@@ -53,10 +53,7 @@ class MetricsCollector(Node):
     def _bootstrap_files(self) -> None:
         if not os.path.exists(self.metrics_path):
             with open(self.metrics_path, "w", newline="") as f:
-                w = csv.writer(f)
-                w.writerow([f"# scenario={self.scenario}",
-                            f"# generated={datetime.now().isoformat()}"])
-                w.writerow(["Time", "CPU", "Memory",
+                csv.writer(f).writerow(["Time", "CPU", "Memory",
                             "CPU_roll", "CPU_slope",
                             "Mem_roll", "Mem_slope",
                             "CPU_viol", "Mem_viol"])

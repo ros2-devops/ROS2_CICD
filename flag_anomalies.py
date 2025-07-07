@@ -32,9 +32,11 @@ if thresh_file:
     need(os.path.join(MODEL_DIR, thresh_file), f"{thresh_file} missing")
 
 # ───────── ingest ─────────
-df = pd.read_csv(csv_path, skiprows=2)
-df = df[[c for c in df.columns if c in ["Time"] + feature_cols]]
-df = df.apply(pd.to_numeric, errors="coerce").dropna()
+df = (
+    pd.read_csv(csv_path, usecols=["Time"] + feature_cols)  # only the columns we need
+      .apply(pd.to_numeric, errors="coerce")
+      .dropna()
+)
 if df.empty: sys.exit("No usable rows in cleaned DataFrame")
 
 scaler = joblib.load(os.path.join(MODEL_DIR, "scaler.pkl"))
