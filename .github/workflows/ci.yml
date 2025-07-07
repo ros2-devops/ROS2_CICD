@@ -171,7 +171,7 @@ jobs:
           ssh-keyscan "$VM_HOST" >> ~/.ssh/known_hosts
           scp -i ~/.ssh/gha_key \
               evaluation_summary_*.txt best_model_*.md \
-              anomaly_result_log_* *.png \
+              anomaly_result_log_*_* *.png \
               "$VM_USER@$VM_HOST:~/ROS2_CICD/dashboard_artifacts/"
 
 
