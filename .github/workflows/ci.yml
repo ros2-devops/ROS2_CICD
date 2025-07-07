@@ -99,7 +99,7 @@ jobs:
           export SCENARIO=${{ matrix.scenario }}
           for model in iforest ae cnn_lstm; do
             export AI_MODEL=$model
-            echo "▶ Running detection: $model on $SCENARIO"
+            echo " Running detection: $model on $SCENARIO"
             python3 flag_anomalies.py
           done
           
@@ -165,7 +165,6 @@ jobs:
           VM_HOST: 34.89.44.176
         run: |
           mkdir -p ~/.ssh
-          ssh-keyscan $VM_HOST >> ~/.ssh/known_hosts
           ssh-keyscan $VM_HOST >> ~/.ssh/known_hosts
           scp -o StrictHostKeyChecking=no \
               evaluation_summary_*.txt best_model_*.md anomaly_result_log_* *.png \

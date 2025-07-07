@@ -68,3 +68,6 @@ if os.path.exists(best_model_md):
         st.markdown(f.read())
 else:
     st.warning("No best model report available.")
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8080, debug=True)

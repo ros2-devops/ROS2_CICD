@@ -100,6 +100,11 @@ class MetricsCollector(Node):
         if now >= self.max_duration:
             self._finalise()
 
+        if len(self.cpu_hist) < 3:
+            self.get_logger().warning("Insufficient metrics collected — skipping log")
+            return
+
+
     # ──────────────────────────────────────────────────────────────────
     def _finalise(self) -> None:
         result = "FAIL" if (self.cpu_viol or self.mem_viol) else "PASS"
