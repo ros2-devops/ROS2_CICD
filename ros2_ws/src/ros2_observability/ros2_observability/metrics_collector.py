@@ -57,7 +57,8 @@ class MetricsCollector(Node):
                              f"# generated={datetime.now().isoformat()}"])
                 wr.writerow(["Time", "CPU", "Memory",
                             "CPU_roll", "CPU_slope",
-                            "Mem_roll", "Mem_slope"])
+                            "Mem_roll", "Mem_slope",
+                            "CPU_viol","Mem_viol"])
         if not os.path.exists(self.simlog_file):
             with open(self.simlog_file, "w") as f:
                 f.write("Timestamp,Scenario,Result,CPU_violations,"
@@ -68,12 +69,15 @@ class MetricsCollector(Node):
         now   = time.time() - self.start_time
         cpu   = psutil.cpu_percent()
         mem   = psutil.virtual_memory().percent
-
+        MIN_SAMPLES = 5
         # keep rolling window
         self.cpu_hist.append(cpu);  self.mem_hist.append(mem)
         if len(self.cpu_hist) > int(WIN_SEC / self.period) + 1:
             self.cpu_hist.pop(0);   self.mem_hist.pop(0)
-
+        if len(self.cpu_hist) < MIN_SAMPLES:
+            self.get_logger().warning("run too short – not enough metrics")
+            self._finalise()
+            return
         cpu_roll = np.mean(self.cpu_hist)
         mem_roll = np.mean(self.mem_hist)
 
@@ -95,14 +99,13 @@ class MetricsCollector(Node):
 
         self.get_logger().info(
             f"t={now:5.1f}s | CPU {cpu:5.1f}%  mem {mem:5.1f}% "
-            f"(μ {cpu_mean:4.1f}/{mem_mean:4.1f})")
+            f"(μ {cpu_roll:4.1f}/{mem_roll:4.1f})")
+
 
         if now >= self.max_duration:
             self._finalise()
 
-        if len(self.cpu_hist) < 3:
-            self.get_logger().warning("Insufficient metrics collected — skipping log")
-            return
+        
 
 
     # ──────────────────────────────────────────────────────────────────

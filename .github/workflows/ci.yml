@@ -158,17 +158,22 @@ jobs:
           name: evaluation_log_${{ matrix.scenario }}
           path: evaluation_log_${{ matrix.scenario }}.csv
 
-      - name: Upload to Dashboard VM
+      - name: Upload artefacts to dashboard VM
         if: always()
         env:
           VM_USER: ec24136
           VM_HOST: 35.189.95.155
+          SSH_KEY: ${{ secrets.DASHBOARD_SSH_KEY }}
         run: |
           mkdir -p ~/.ssh
-          ssh-keyscan $VM_HOST >> ~/.ssh/known_hosts
-          scp -o StrictHostKeyChecking=no \
-              evaluation_summary_*.txt best_model_*.md anomaly_result_log_* *.png \
-              $VM_USER@$VM_HOST:~/ROS2_CICD/dashboard_artifacts/
+          echo "$SSH_KEY" > ~/.ssh/gha_key
+          chmod 600 ~/.ssh/gha_key
+          ssh-keyscan "$VM_HOST" >> ~/.ssh/known_hosts
+          scp -i ~/.ssh/gha_key \
+              evaluation_summary_*.txt best_model_*.md \
+              anomaly_result_log_* *.png \
+              "$VM_USER@$VM_HOST:~/ROS2_CICD/dashboard_artifacts/"
+
 
 
   docker:
