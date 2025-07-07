@@ -15,7 +15,14 @@ for p in (log_path, metrics_path):
         print(f"{p} not found"); sys.exit(1)
 
 # ───────── load ─────────
-log_df = pd.read_csv(log_path, header=None, names=["timestamp", "scenario", "result"])
+log_df = pd.read_csv(
+     log_path,
+     header=None,
+     names=[
+         "timestamp", "scenario", "result",
+         "cpu_viol", "mem_viol", "max_cpu", "max_mem"
+     ]
+ )
 metrics_df = pd.read_csv(metrics_path)
 metrics_df = metrics_df[[c for c in metrics_df.columns if c in [
     "Time", "CPU", "Memory", "CPU_roll", "CPU_slope", "Mem_roll", "Mem_slope"]]]
