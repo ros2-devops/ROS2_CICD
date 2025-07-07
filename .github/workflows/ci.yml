@@ -158,21 +158,32 @@ jobs:
           name: evaluation_log_${{ matrix.scenario }}
           path: evaluation_log_${{ matrix.scenario }}.csv
 
-      - name: Upload artefacts to dashboard VM
+      - name: Upload to Dashboard VM
         if: always()
         env:
           VM_USER: ec24136
           VM_HOST: 35.189.95.155
-          SSH_KEY: ${{ secrets.DASHBOARD_SSH_KEY }}
+          SSH_KEY: ${{ secrets.DEPLOY_KEY }}
         run: |
           mkdir -p ~/.ssh
           echo "$SSH_KEY" > ~/.ssh/gha_key
           chmod 600 ~/.ssh/gha_key
           ssh-keyscan "$VM_HOST" >> ~/.ssh/known_hosts
-          scp -i ~/.ssh/gha_key \
-              evaluation_summary_*.txt best_model_*.md \
-              anomaly_result_log_*_* *.png \
-              "$VM_USER@$VM_HOST:~/ROS2_CICD/dashboard_artifacts/"
+
+          # Upload summary and best-model files
+          scp -i ~/.ssh/gha_key evaluation_summary_*.txt best_model_*.md \
+            "$VM_USER@$VM_HOST:~/ROS2_CICD/dashboard_artifacts/" || true
+
+          # Upload per-model anomaly results if available
+          for model in iforest ae cnn_lstm; do
+            for scen in demo1 demo2 arena maze dynamic multibot; do
+              scp -i ~/.ssh/gha_key \
+                anomaly_result_log_${model}_${scen}.csv \
+                anomaly_result_${model}_${scen}.txt \
+                anomaly_plot_${model}_${scen}.png \
+                "$VM_USER@$VM_HOST:~/ROS2_CICD/dashboard_artifacts/" || true
+            done
+          done
 
 
 
