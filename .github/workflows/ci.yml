@@ -184,6 +184,12 @@ jobs:
                 "$VM_USER@$VM_HOST:~/ROS2_CICD/dashboard_artifacts/" || true
             done
           done
+      - name: Debug key file
+        run: |
+          cat -A ~/.ssh/gha_key || echo "Key not found"
+          file ~/.ssh/gha_key || echo "No info"
+          ls -l ~/.ssh/gha_key || echo "Missing key"
+
 
 
 
