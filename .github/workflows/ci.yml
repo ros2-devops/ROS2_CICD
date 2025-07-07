@@ -162,7 +162,7 @@ jobs:
         if: always()
         env:
           VM_USER: ec24136
-          VM_HOST: 34.89.44.176
+          VM_HOST: 35.189.95.155
         run: |
           mkdir -p ~/.ssh
           ssh-keyscan $VM_HOST >> ~/.ssh/known_hosts
