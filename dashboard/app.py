@@ -8,7 +8,7 @@ from glob import glob
 st.set_page_config(layout="wide")
 st.title("ROS 2 AI Simulation Dashboard")
 
-artifact_dir = "dashboard_artifacts"
+artifact_dir = "../dashboard_artifacts"
 os.makedirs(artifact_dir, exist_ok=True)
 
 # Helper
@@ -17,13 +17,17 @@ def load_text_file(path):
         return f.read()
 
 # Sidebar: scenario picker
-scenarios = sorted({
-    f.split("_")[-1].split(".")[0]
-    for f in glob(os.path.join(artifact_dir, "*_*.txt")) + 
-             glob(os.path.join(artifact_dir, "*_*.md")) + 
-             glob(os.path.join(artifact_dir, "*.csv"))
-})
+import re
+
+scenarios = sorted([
+    f.replace("evaluation_summary_", "").replace(".txt", "")
+    for f in os.listdir(artifact_dir)
+    if f.startswith("evaluation_summary_") and f.endswith(".txt")
+])
+
 selected_scenario = st.sidebar.selectbox("Select Scenario", scenarios)
+st.sidebar.write("DEBUG – scenarios found:", scenarios)
+
 
 # Section 1: Simulation Summary
 summary_path = os.path.join(artifact_dir, f"evaluation_summary_{selected_scenario}.txt")
@@ -69,5 +73,3 @@ if os.path.exists(best_model_md):
 else:
     st.warning("No best model report available.")
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8080, debug=True)
