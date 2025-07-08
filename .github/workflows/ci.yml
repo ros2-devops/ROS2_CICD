@@ -190,9 +190,6 @@ jobs:
           VM_HOST: 35.189.95.155
 
 
-
-
-
   docker:
     needs: simulate
     if: needs.simulate.outputs.result == 'PASS'

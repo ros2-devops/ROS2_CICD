@@ -33,7 +33,7 @@ class MetricsCollector(Node):
                                          f"ros_metrics_{self.scenario}.csv")
         self.simlog_path  = os.path.join(WORK_DIR,
                                          f"simulation_log_{self.scenario}.csv")
-        self.result_file  = os.path.join(WORK_DIR, f'assertion_result_{scenario}.txt')
+        self.result_file  = os.path.join(WORK_DIR, f'assertion_result_{self.scenario}.txt')
 
         # ── state ───────────────────────────────────────────────
         self.t0        = time.time()
