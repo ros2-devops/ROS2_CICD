@@ -158,27 +158,7 @@ jobs:
           name: evaluation_log_${{ matrix.scenario }}
           path: evaluation_log_${{ matrix.scenario }}.csv
 
-      - name: 🔍 Debug SSH Key Format
-        run: |
-          mkdir -p ~/.ssh
-          echo "$SSH_KEY" > ~/.ssh/gha_key
-          chmod 600 ~/.ssh/gha_key
-
-          echo "🔐 Preview first lines of key:"
-          head -n 5 ~/.ssh/gha_key || echo "[HEAD FAILED]"
-
-          echo "🔍 File info:"
-          file ~/.ssh/gha_key || echo "file check failed"
-
-          echo "🧱 Line count:"
-          wc -l ~/.ssh/gha_key
-
-          echo " Raw cat:"
-          cat -A ~/.ssh/gha_key
-        env:
-          SSH_KEY: ${{ secrets.SSH_KEY_B64 }}
-
-      - name: Setup SSH key
+      - name: Setup SSH Key
         run: |
           mkdir -p ~/.ssh
           echo "$SSH_KEY_B64" | base64 -d > ~/.ssh/gha_key
@@ -190,26 +170,15 @@ jobs:
 
       - name: Upload to Dashboard VM
         if: always()
+        run: |
+          scp -i ~/.ssh/gha_key \
+            evaluation_summary_*.txt best_model_*.md \
+            anomaly_result_log_*_*.csv anomaly_plot_*_*.png \
+            $VM_USER@$VM_HOST:~/ROS2_CICD/dashboard_artifacts/
         env:
           VM_USER: ec24136
           VM_HOST: 35.189.95.155
-          SSH_KEY: ${{ secrets.SSH_KEY_B64 }}
-        run: |
-          mkdir -p ~/.ssh
-          echo "$SSH_KEY_B64" | base64 -d > ~/.ssh/gha_key
-          chmod 600 ~/.ssh/gha_key
-          ssh-keyscan "$VM_HOST" >> ~/.ssh/known_hosts
 
-          scp -i ~/.ssh/gha_key \
-          evaluation_summary_*.txt best_model_*.md \
-          anomaly_result_log_*_*.csv anomaly_plot_*_*.png \
-          $VM_USER@$VM_HOST:~/ROS2_CICD/dashboard_artifacts/
-
-      - name: Debug key file
-        run: |
-          cat -A ~/.ssh/gha_key || echo "Key not found"
-          file ~/.ssh/gha_key || echo "No info"
-          ls -l ~/.ssh/gha_key || echo "Missing key"
 
 
 
