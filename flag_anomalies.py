@@ -11,6 +11,7 @@ csv_path   = f"ros_metrics_{scenario}.csv"
 result_txt = f"anomaly_result_{selector}_{scenario}.txt"
 plot_path  = f"anomaly_plot_{selector}_{scenario}.png"
 log_path   = f"anomaly_result_log_{selector}_{scenario}.csv"
+recon_plot = f"recon_error_{selector}_{scenario}.png"
 
 feature_cols = ["CPU", "Memory", "CPU_roll", "CPU_slope", "Mem_roll", "Mem_slope"]
 model_files = {
@@ -33,7 +34,7 @@ if thresh_file:
 
 # ───────── ingest ─────────
 df = (
-    pd.read_csv(csv_path, usecols=["Time"] + feature_cols)  # only the columns we need
+    pd.read_csv(csv_path, usecols=["Time"] + feature_cols)
       .apply(pd.to_numeric, errors="coerce")
       .dropna()
 )
@@ -46,6 +47,7 @@ X_scaled = scaler.transform(df[feature_cols])
 if selector == "iforest":
     model = joblib.load(os.path.join(MODEL_DIR, model_file))
     df["anomaly"] = model.predict(X_scaled)  # -1 = anomaly
+
 else:
     model  = load_model(os.path.join(MODEL_DIR, model_file))
     thresh = float(joblib.load(os.path.join(MODEL_DIR, thresh_file)))
@@ -63,6 +65,25 @@ else:
     errs = np.mean((recon - X_scaled) ** 2, axis=1)
     df["anomaly"] = (errs > thresh).astype(int) * -1
 
+    # ───────── diagnostics ─────────
+    print(f"[{selector}] Threshold = {thresh:.4f}")
+    print(f"[{selector}] Mean MSE  = {errs.mean():.4f}")
+    print(f"[{selector}] Max  MSE  = {errs.max():.4f}")
+    print(f"[{selector}] Anomaly % = {(df['anomaly'] == -1).mean() * 100:.2f}%")
+    print("\nSample inputs vs reconstructions:")
+    for i in range(min(3, len(X_scaled))):
+        print(f"  Input {i}: {X_scaled[i]}")
+        print(f"  Recon {i}: {recon[i]}\n")
+
+    # ───────── plot reconstruction error ─────────
+    plt.figure(figsize=(6, 3))
+    plt.hist(errs, bins=50, color="gray")
+    plt.axvline(thresh, color="red", linestyle="--", label="Threshold")
+    plt.title(f"Reconstruction Error ({selector} - {scenario})")
+    plt.xlabel("MSE"); plt.ylabel("Count")
+    plt.tight_layout()
+    plt.savefig(recon_plot)
+
 # ───────── reporting ─────────
 n_anom = int((df["anomaly"] == -1).sum())
 p_anom = n_anom / len(df) * 100
@@ -73,7 +94,7 @@ with open(result_txt, "w") as f:
     f.write(f"ANOMALY DETECTED\nCount: {n_anom}\nShare: {p_anom:.2f} %\nType: {atype}\nAI Action: {action}\n" if n_anom
             else "NO ANOMALY\nAI Action: No action\n")
 
-# ───────── plot ─────────
+# ───────── plot anomalies ─────────
 t, cpu = df["Time"].to_numpy(), df["CPU"].to_numpy()
 mask   = df["anomaly"].to_numpy() == -1
 

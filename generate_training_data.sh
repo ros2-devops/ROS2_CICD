@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # CONFIG ----------------------------------------------------------------
-SCENARIOS=(demo1 demo2)
+SCENARIOS=(demo1 demo2 arena maze dynamic multibot)
 REPEAT=30               # 30 runs per scenario
 DURATION=90             # sec
 INTERVAL=0.5            # LOG_INTERVAL (higher sample rate)
