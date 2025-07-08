@@ -178,6 +178,15 @@ jobs:
         env:
           SSH_KEY: ${{ secrets.SSH_KEY_B64 }}
 
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY_B64" | base64 -d > ~/.ssh/gha_key
+          chmod 600 ~/.ssh/gha_key
+          ssh-keyscan "$VM_HOST" >> ~/.ssh/known_hosts
+        env:
+          SSH_KEY_B64: ${{ secrets.SSH_KEY_B64 }}
+          VM_HOST: 35.189.95.155
 
       - name: Upload to Dashboard VM
         if: always()
@@ -195,7 +204,7 @@ jobs:
           evaluation_summary_*.txt best_model_*.md \
           anomaly_result_log_*_*.csv anomaly_plot_*_*.png \
           $VM_USER@$VM_HOST:~/ROS2_CICD/dashboard_artifacts/
-          
+
       - name: Debug key file
         run: |
           cat -A ~/.ssh/gha_key || echo "Key not found"
