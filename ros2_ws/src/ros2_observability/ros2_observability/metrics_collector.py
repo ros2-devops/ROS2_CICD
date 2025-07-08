@@ -33,6 +33,7 @@ class MetricsCollector(Node):
                                          f"ros_metrics_{self.scenario}.csv")
         self.simlog_path  = os.path.join(WORK_DIR,
                                          f"simulation_log_{self.scenario}.csv")
+        self.result_file  = os.path.join(WORK_DIR, f'assertion_result_{scenario}.txt')
 
         # ── state ───────────────────────────────────────────────
         self.t0        = time.time()
@@ -110,6 +111,8 @@ class MetricsCollector(Node):
             f.write(f"{datetime.now().isoformat()},{self.scenario},{result},"
                     f"{self.cpu_viol},{self.mem_viol},"
                     f"{max(self.cpu_hist):.1f},{max(self.mem_hist):.1f}\n")
+        with open(self.result_file, 'w') as f:
+            f.write(result)
 
         self.get_logger().warning(
             f"Finished ({result}) — CPU viol={self.cpu_viol}, "

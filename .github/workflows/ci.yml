@@ -167,10 +167,20 @@ jobs:
         env:
           SSH_KEY_B64: ${{ secrets.SSH_KEY_B64 }}
           VM_HOST: 35.189.95.155
+      
+      - name: 🧭 Debug workspace contents
+        run: |
+          echo "📂 Root directory:"
+          ls -lh
+
+          echo -e "\n📁 Subdirectories and anomaly results:"
+          find . -type f -name 'anomaly_result_log_*_*.csv' -o -name 'anomaly_plot_*_*.png'
+
 
       - name: Upload to Dashboard VM
         if: always()
         run: |
+          find ai_anomaly_results_* -type f -exec cp {} . \;
           scp -i ~/.ssh/gha_key \
             evaluation_summary_*.txt best_model_*.md \
             anomaly_result_log_*_*.csv anomaly_plot_*_*.png \
