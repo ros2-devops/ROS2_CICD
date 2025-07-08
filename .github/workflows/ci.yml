@@ -173,7 +173,7 @@ jobs:
           echo "🧱 Line count:"
           wc -l ~/.ssh/gha_key
 
-          echo "🔁 Raw cat:"
+          echo " Raw cat:"
           cat -A ~/.ssh/gha_key
         env:
           SSH_KEY: ${{ secrets.SSH_KEY_B64 }}
