@@ -167,7 +167,7 @@ jobs:
           ssh-keyscan "$VM_HOST" >> ~/.ssh/known_hosts
         env:
           SSH_KEY_B64: ${{ secrets.SSH_KEY_B64 }}
-          VM_HOST: 35.189.95.155
+          VM_HOST: 34.105.133.220
       
       
       - name: Upload to Dashboard VM
@@ -181,7 +181,7 @@ jobs:
             $VM_USER@$VM_HOST:~/ROS2_CICD/dashboard_artifacts/
         env:
           VM_USER: ec24136
-          VM_HOST: 35.189.95.155
+          VM_HOST: 34.105.133.220
 
 
   docker:
