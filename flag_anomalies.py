@@ -84,6 +84,14 @@ else:
     plt.tight_layout()
     plt.savefig(recon_plot)
 
+    plt.hist(errs, bins=50, alpha=0.7)
+    plt.axvline(thresh, color='r', linestyle='--', label='Threshold')
+    plt.title(f'MSE Histogram – {selector} ({scenario})')
+    plt.xlabel("MSE"); plt.ylabel("Count")
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig(f"debug_mse_{selector}_{scenario}.png")
+
 # ───────── reporting ─────────
 n_anom = int((df["anomaly"] == -1).sum())
 p_anom = n_anom / len(df) * 100
@@ -107,13 +115,7 @@ plt.title(f"CPU Anomalies – {scenario} ({selector})")
 plt.legend(); plt.tight_layout()
 plt.savefig(plot_path)
 
-plt.hist(errs, bins=50, alpha=0.7)
-plt.axvline(thresh, color='r', linestyle='--', label='Threshold')
-plt.title(f'MSE Histogram – {selector} ({scenario})')
-plt.xlabel("MSE"); plt.ylabel("Count")
-plt.legend()
-plt.tight_layout()
-plt.savefig(f"debug_mse_{selector}_{scenario}.png")
+
 
 
 # ───────── log ─────────
