@@ -128,7 +128,6 @@ jobs:
             mv anomaly_result_${model}_${{ matrix.scenario }}.txt "$name/"
             mv anomaly_plot_${model}_${{ matrix.scenario }}.png "$name/"
             mv anomaly_result_log_${model}_${{ matrix.scenario }}.csv "$name/"
-            mv anomaly_result_log_${model}_${{ matrix.scenario }}.csv "$name/"
             mv recon_error_${model}_${{ matrix.scenario }}.png "$name/"
             mv debug_mse_${model}_${{ matrix.scenario }}.png "$name/"
             
