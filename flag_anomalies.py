@@ -129,13 +129,14 @@ log_head = "Timestamp,Scenario,Model,AnomalyCount,AnomalyPct,AnomalyType,AI_Acti
 log_row  = f"{datetime.now().isoformat()},{scenario},{selector},{n_anom},{p_anom:.2f},{atype},{action}\n"
 first = not os.path.exists(log_path)
 
-print("Current working dir:", os.getcwd())
-print("Expected path:", flagged_path)
 
 
 # ───────── save flagged data ─────────
 flagged_path = f"../dashboard_artifacts/anomaly_summary_{selector}_{scenario}.csv"
 os.makedirs(os.path.dirname(flagged_path), exist_ok=True)
+
+print("Current working dir:", os.getcwd())
+print("Expected path:", flagged_path)
 
 df_flagged = df[df["anomaly"] == -1].copy()
 df_flagged["Model"] = selector
