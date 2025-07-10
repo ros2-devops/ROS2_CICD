@@ -73,3 +73,15 @@ if os.path.exists(best_model_md):
 else:
     st.warning("No best model report available.")
 
+# Section 4: Flagged Anomaly Data (Detailed)
+st.header("📍 Flagged Data (Best Model)")
+
+flagged_data_path = os.path.join(artifact_dir, f"anomaly_summary_{selected_scenario}.csv")
+if os.path.exists(flagged_data_path):
+    df_flagged = pd.read_csv(flagged_data_path)
+    st.write(f"Flagged points from best model (`{df_flagged['Model'].iloc[0]}`):")
+    st.dataframe(df_flagged, use_container_width=True)
+else:
+    st.info("No flagged data available for this scenario.")
+
+

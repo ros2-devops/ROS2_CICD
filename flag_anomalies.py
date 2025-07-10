@@ -49,7 +49,7 @@ if selector == "iforest":
     df["anomaly"] = model.predict(X_scaled)  # -1 = anomaly
 
 else:
-    
+
     model = load_model(os.path.join(MODEL_DIR, model_file))
 
     if selector == "cnn_lstm":
@@ -128,6 +128,13 @@ plt.savefig(plot_path)
 log_head = "Timestamp,Scenario,Model,AnomalyCount,AnomalyPct,AnomalyType,AI_Action\n"
 log_row  = f"{datetime.now().isoformat()},{scenario},{selector},{n_anom},{p_anom:.2f},{atype},{action}\n"
 first = not os.path.exists(log_path)
+
+# ───────── save flagged data ─────────
+flagged_path = f"dashboard_artifacts/anomaly_summary_{selector}_{scenario}.csv"
+df_flagged = df[df["anomaly"] == -1].copy()
+df_flagged["Model"] = selector
+df_flagged.to_csv(flagged_path, index=False)
+
 
 with open(log_path, "a") as f:
     if first: f.write(log_head)
