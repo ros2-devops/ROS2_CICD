@@ -50,7 +50,9 @@ if selector == "iforest":
 
 else:
     model  = load_model(os.path.join(MODEL_DIR, model_file))
-    thresh = float(joblib.load(os.path.join(MODEL_DIR, thresh_file)))
+    recon = model.predict(X_scaled if selector == "ae" else Xseq, verbose=0).reshape(-1, X_scaled.shape[1])[:len(X_scaled)]
+    errs = np.mean((recon - X_scaled) ** 2, axis=1)
+    thresh = np.percentile(errs, 99)  # ← updated threshold strategy
 
     if selector == "cnn_lstm":
         STEP = 20
@@ -62,7 +64,7 @@ else:
     elif selector == "ae":
         recon = model.predict(X_scaled, verbose=0)
 
-    errs = np.mean((recon - X_scaled) ** 2, axis=1)
+    #errs = np.mean((recon - X_scaled) ** 2, axis=1)
     df["anomaly"] = (errs > thresh).astype(int) * -1
 
     # ───────── diagnostics ─────────
