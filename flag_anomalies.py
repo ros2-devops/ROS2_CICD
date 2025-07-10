@@ -131,16 +131,15 @@ first = not os.path.exists(log_path)
 
 
 
-# ───────── save flagged data ─────────
-# ───────── save flagged data ─────────
-flagged_path = os.path.join("..", "dashboard_artifacts", f"anomaly_summary_{scenario}.csv")
-os.makedirs(os.path.dirname(flagged_path), exist_ok=True)
-
-df_flagged = df[df["anomaly"] == -1].copy()
-df_flagged["Model"] = selector  # add this so app.py can show the model name
-df_flagged.to_csv(flagged_path, index=False)
-
-
+# ───────── append flagged data to anomaly log ─────────
 with open(log_path, "a") as f:
-    if first: f.write(log_head)
+    if first:
+        f.write(log_head)
+
     f.write(log_row)
+
+    if n_anom:
+        f.write("\n# Flagged Anomaly Data\n")
+        df_flagged = df[df["anomaly"] == -1].copy()
+        df_flagged["Model"] = selector
+        df_flagged.to_csv(f, index=False)

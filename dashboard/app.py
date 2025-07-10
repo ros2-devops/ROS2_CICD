@@ -73,20 +73,26 @@ if os.path.exists(best_model_md):
 else:
     st.warning("No best model report available.")
 
-# Section 4: Flagged Anomaly Data (Detailed)
+
 # Section 4: Flagged Anomaly Data (All Models)
 st.header("📍 Flagged Data (All Models)")
 
-flagged_files = glob(os.path.join(artifact_dir, f"anomaly_summary_*_{selected_scenario}.csv"))
+for model in ["iforest", "ae", "cnn_lstm"]:
+    log_path = os.path.join(artifact_dir, f"anomaly_result_log_{model}_{selected_scenario}.csv")
+    if not os.path.exists(log_path):
+        continue
 
-if flagged_files:
-    for fpath in flagged_files:
-        try:
-            df_flagged = pd.read_csv(fpath)
-            model_name = os.path.basename(fpath).split("_")[2]
-            st.subheader(f"Flagged Anomalies – `{model_name}`")
+    with open(log_path, "r") as f:
+        lines = f.readlines()
+
+    # Look for the flagged section
+    try:
+        idx = lines.index("# Flagged Anomaly Data\n")
+        csv_data = lines[idx + 1:]
+        if csv_data:
+            from io import StringIO
+            df_flagged = pd.read_csv(StringIO("".join(csv_data)))
+            st.subheader(f"Flagged Anomalies – `{model}`")
             st.dataframe(df_flagged, use_container_width=True)
-        except Exception as e:
-            st.error(f"Failed to load {fpath}: {e}")
-else:
-    st.info("No flagged data available for this scenario.")
+    except ValueError:
+        continue  # No flagged data in this log
