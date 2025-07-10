@@ -132,14 +132,12 @@ first = not os.path.exists(log_path)
 
 
 # ───────── save flagged data ─────────
-flagged_path = f"../dashboard_artifacts/anomaly_summary_{selector}_{scenario}.csv"
+# ───────── save flagged data ─────────
+flagged_path = os.path.join("..", "dashboard_artifacts", f"anomaly_summary_{scenario}.csv")
 os.makedirs(os.path.dirname(flagged_path), exist_ok=True)
 
-print("Current working dir:", os.getcwd())
-print("Expected path:", flagged_path)
-
 df_flagged = df[df["anomaly"] == -1].copy()
-df_flagged["Model"] = selector
+df_flagged["Model"] = selector  # add this so app.py can show the model name
 df_flagged.to_csv(flagged_path, index=False)
 
 
