@@ -49,23 +49,27 @@ if selector == "iforest":
     df["anomaly"] = model.predict(X_scaled)  # -1 = anomaly
 
 else:
-    model  = load_model(os.path.join(MODEL_DIR, model_file))
-    recon = model.predict(X_scaled if selector == "ae" else Xseq, verbose=0).reshape(-1, X_scaled.shape[1])[:len(X_scaled)]
-    errs = np.mean((recon - X_scaled) ** 2, axis=1)
-    thresh = np.percentile(errs, 99)  # ← updated threshold strategy
+    
+    model = load_model(os.path.join(MODEL_DIR, model_file))
 
     if selector == "cnn_lstm":
         STEP = 20
         pad = STEP - (len(X_scaled) % STEP)
-        Xp  = np.vstack([X_scaled, np.tile(X_scaled[-1], (pad, 1))])
+        Xp = np.vstack([X_scaled, np.tile(X_scaled[-1], (pad, 1))])
         Xseq = Xp.reshape(-1, STEP, X_scaled.shape[1])
         recon = model.predict(Xseq, verbose=0).reshape(-1, X_scaled.shape[1])[:len(X_scaled)]
 
     elif selector == "ae":
         recon = model.predict(X_scaled, verbose=0)
 
-    #errs = np.mean((recon - X_scaled) ** 2, axis=1)
+    errs = np.mean((recon - X_scaled) ** 2, axis=1)
+    # Dynamically set threshold to 99th percentile
+    thresh = np.percentile(errs, 99)
+
     df["anomaly"] = (errs > thresh).astype(int) * -1
+
+    #errs = np.mean((recon - X_scaled) ** 2, axis=1)
+    #df["anomaly"] = (errs > thresh).astype(int) * -1
 
     # ───────── diagnostics ─────────
     print(f"[{selector}] Threshold = {thresh:.4f}")
