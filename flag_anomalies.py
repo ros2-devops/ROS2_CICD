@@ -134,7 +134,7 @@ print("Expected path:", flagged_path)
 
 
 # ───────── save flagged data ─────────
-flagged_path = f"dashboard_artifacts/anomaly_summary_{selector}_{scenario}.csv"
+flagged_path = f"../dashboard_artifacts/anomaly_summary_{selector}_{scenario}.csv"
 os.makedirs(os.path.dirname(flagged_path), exist_ok=True)
 
 df_flagged = df[df["anomaly"] == -1].copy()
