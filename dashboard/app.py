@@ -74,14 +74,19 @@ else:
     st.warning("No best model report available.")
 
 # Section 4: Flagged Anomaly Data (Detailed)
-st.header("📍 Flagged Data (Best Model)")
+# Section 4: Flagged Anomaly Data (All Models)
+st.header("📍 Flagged Data (All Models)")
 
-flagged_data_path = os.path.join(artifact_dir, f"anomaly_summary_{selected_scenario}.csv")
-if os.path.exists(flagged_data_path):
-    df_flagged = pd.read_csv(flagged_data_path)
-    st.write(f"Flagged points from best model (`{df_flagged['Model'].iloc[0]}`):")
-    st.dataframe(df_flagged, use_container_width=True)
+flagged_files = glob(os.path.join(artifact_dir, f"anomaly_summary_*_{selected_scenario}.csv"))
+
+if flagged_files:
+    for fpath in flagged_files:
+        try:
+            df_flagged = pd.read_csv(fpath)
+            model_name = os.path.basename(fpath).split("_")[2]
+            st.subheader(f"Flagged Anomalies – `{model_name}`")
+            st.dataframe(df_flagged, use_container_width=True)
+        except Exception as e:
+            st.error(f"Failed to load {fpath}: {e}")
 else:
     st.info("No flagged data available for this scenario.")
-
-
