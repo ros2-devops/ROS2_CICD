@@ -127,10 +127,6 @@ jobs:
             mv anomaly_result_${model}_${{ matrix.scenario }}.txt "$name/"
             mv anomaly_plot_${model}_${{ matrix.scenario }}.png "$name/"
             mv anomaly_result_log_${model}_${{ matrix.scenario }}.csv "$name/"
-            mv recon_error_ae_${{ matrix.scenario }}.png "$name/"
-            mv debug_mse_ae_${{ matrix.scenario }}.png "$name/"
-            mv recon_error_cnn_lstm_${{ matrix.scenario }}.png "$name/"
-            mv debug_mse_cnn_lstm_${{ matrix.scenario }}.png "$name/"
             
             echo "Prepared folder: $name"
           done
