@@ -25,8 +25,8 @@ class MetricsCollector(Node):
 
         # ── runtime params from env ─────────────────────────────
         self.scenario     = os.getenv("SCENARIO", "unknown")
-        self.period       = float(os.getenv("LOG_INTERVAL", 1.0))
-        self.max_duration = int(os.getenv("SIM_DURATION", 60))
+        self.period       = float(os.getenv("LOG_INTERVAL", 0.5))
+        self.max_duration = int(os.getenv("SIM_DURATION", 120))
 
         # ── paths ───────────────────────────────────────────────
         self.metrics_path = os.path.join(WORK_DIR,

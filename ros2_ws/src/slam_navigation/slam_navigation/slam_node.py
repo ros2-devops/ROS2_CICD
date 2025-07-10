@@ -8,7 +8,7 @@ class SlamNavigator(Node):
     def __init__(self):
         super().__init__('slam_navigator')
         self.publisher = self.create_publisher(Twist, '/cmd_vel', 10)
-        self.timer = self.create_timer(1.0, self.move)
+        self.timer = self.create_timer(0.25, self.move)
         self.counter = 0
 
     def move(self):

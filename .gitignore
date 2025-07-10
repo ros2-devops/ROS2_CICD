@@ -52,6 +52,11 @@ qtcreator-*
 CATKIN_IGNORE
 
 ros_metrics.csv
+*.csv
+*.log
 *.npy
 X_scaled.npy
 dashboard_artifacts/anomaly_plot_demo1.png
+ros2_ws/log/build_2025-07-09_15-44-51/slam_navigation/stdout.log
+ros2_ws/log/build_2025-07-09_15-44-51/slam_navigation/command.log
+*.txt

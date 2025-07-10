@@ -111,7 +111,6 @@ function colcon_package_source_powershell_script {
 $env:COLCON_CURRENT_PREFIX=(Get-Item $PSCommandPath).Directory.Parent.Parent.FullName
 
 colcon_package_source_powershell_script "$env:COLCON_CURRENT_PREFIX\share/cpu_hog_controller/hook/cmake_prefix_path.ps1"
-colcon_package_source_powershell_script "$env:COLCON_CURRENT_PREFIX\share/cpu_hog_controller/hook/pythonpath.ps1"
 colcon_package_source_powershell_script "$env:COLCON_CURRENT_PREFIX\share/cpu_hog_controller/hook/ros_package_path.ps1"
 colcon_package_source_powershell_script "$env:COLCON_CURRENT_PREFIX\share/cpu_hog_controller/hook/pkg_config_path.ps1"
 colcon_package_source_powershell_script "$env:COLCON_CURRENT_PREFIX\share/cpu_hog_controller/hook/pkg_config_path_multiarch.ps1"

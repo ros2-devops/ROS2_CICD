@@ -12,7 +12,7 @@ class CpuHog(Node):
 
     def burn_cpu(self):
         while rclpy.ok():
-            _ = sum(i * i for i in range(100000))  # simulate CPU load
+            _ = sum(i * i for i in range(500000))  # simulate CPU load
             time.sleep(0.01)
 
 def main(args=None):
