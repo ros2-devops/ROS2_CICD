@@ -9,7 +9,8 @@ for log in glob.glob(f"anomaly_result_log_*_{SCENARIO}.csv"):
     model = log.replace("anomaly_result_log_", "").replace(f"_{SCENARIO}.csv", "")
     with open(log) as f:
         last = list(csv.reader(f))[-1]
-    rows.append((model, int(last[3]), float(last[4])))
+    rows.append((model, int(float(last[3])), float(last[4])))
+
 
 if not rows:
     sys.exit("No logs found!")
