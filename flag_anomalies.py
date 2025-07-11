@@ -139,7 +139,8 @@ with open(log_path, "a") as f:
     f.write(log_row)
 
     if n_anom:
-        f.write("\n# Flagged Anomaly Data\n")
+        flagged_csv = os.path.join("dashboard_artifacts", f"anomaly_summary_{selector}_{scenario}.csv")
+        os.makedirs(os.path.dirname(flagged_csv), exist_ok=True)
         df_flagged = df[df["anomaly"] == -1].copy()
         df_flagged["Model"] = selector
-        df_flagged.to_csv(f, index=False)
+        df_flagged.to_csv(flagged_csv, index=False)

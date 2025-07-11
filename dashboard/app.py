@@ -75,24 +75,18 @@ else:
 
 
 # Section 4: Flagged Anomaly Data (All Models)
+# Section 4: Flagged Anomaly Data (All Models)
 st.header("📍 Flagged Data (All Models)")
 
 for model in ["iforest", "ae", "cnn_lstm"]:
-    log_path = os.path.join(artifact_dir, f"anomaly_result_log_{model}_{selected_scenario}.csv")
-    if not os.path.exists(log_path):
-        continue
-
-    with open(log_path, "r") as f:
-        lines = f.readlines()
-
-    # Look for the flagged section
-    try:
-        idx = lines.index("# Flagged Anomaly Data\n")
-        csv_data = lines[idx + 1:]
-        if csv_data:
-            from io import StringIO
-            df_flagged = pd.read_csv(StringIO("".join(csv_data)))
+    flagged_path = os.path.join(artifact_dir, f"anomaly_summary_{model}_{selected_scenario}.csv")
+    if os.path.exists(flagged_path):
+        try:
+            df_flagged = pd.read_csv(flagged_path)
             st.subheader(f"Flagged Anomalies – `{model}`")
             st.dataframe(df_flagged, use_container_width=True)
-    except ValueError:
-        continue  # No flagged data in this log
+        except Exception as e:
+            st.error(f"Could not read flagged data for {model}: {e}")
+    else:
+        st.info(f"No flagged data found for {model}")
+
