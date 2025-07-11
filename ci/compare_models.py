@@ -9,7 +9,24 @@ for log in glob.glob(f"anomaly_result_log_*_{SCENARIO}.csv"):
     model = log.replace("anomaly_result_log_", "").replace(f"_{SCENARIO}.csv", "")
     with open(log) as f:
         last = list(csv.reader(f))[-1]
-    rows.append((model, int(float(last[3])), float(last[4])))
+    try:
+        anom_count = int(float(last[3]))
+        anom_pct = float(last[4])
+    except ValueError:
+        # fallback: look for matching "AnomalyCount" line
+        for line in reversed(lines):
+            if line.strip().startswith("Timestamp"):
+                continue
+            parts = line.strip().split(",")
+            if len(parts) >= 5:
+                try:
+                    anom_count = int(float(parts[3]))
+                    anom_pct = float(parts[4])
+                    break
+                except:
+                    pass
+    rows.append((model, anom_count, anom_pct))
+
 
 
 if not rows:

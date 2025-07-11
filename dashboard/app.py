@@ -53,7 +53,7 @@ for model in ["iforest", "ae", "cnn_lstm"]:
     if os.path.exists(path):
         st.subheader(f"{model.upper()} Anomalies")
         try:
-            df = pd.read_csv(path)
+          
             st.dataframe(df.tail(10), use_container_width=True)
         except Exception as e:
             st.error(f"Could not load {model} log: {e}")

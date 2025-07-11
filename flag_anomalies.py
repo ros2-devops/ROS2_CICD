@@ -100,7 +100,7 @@ else:
 
 # ───────── reporting ─────────
 n_anom = int((df["anomaly"] == -1).sum())
-p_anom = n_anom / len(df) * 100
+p_anom = n_anom / len(df) * 100 if len(df) > 0 else 0
 action = "Investigate resource trend" if n_anom else "No action"
 atype  = "Resource-trend" if n_anom else "None"
 
