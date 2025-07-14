@@ -150,14 +150,3 @@ if selector != "iforest":
 
 print(f"Anomaly results saved to {log_path} with {anom_count} anomalies.")
 
-with open(log_path, "a") as f:
-    if first:
-        f.write(log_head)
-
-    f.write(log_row)
-
-    if n_anom:
-        flagged_csv = f"anomaly_summary_{selector}_{scenario}.csv"
-        df_flagged = df[df["anomaly"] == -1].copy()
-        df_flagged["Model"] = selector
-        df_flagged.to_csv(flagged_csv, index=False)

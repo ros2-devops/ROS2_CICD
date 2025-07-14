@@ -178,7 +178,6 @@ jobs:
           evaluation_summary_*.txt best_model_*.md \
           simulation_log_*.csv \
           anomaly_result_log_*_*.csv anomaly_plot_*_*.png \
-          anomaly_summary_*_*.csv \
           $VM_USER@$VM_HOST:~/ROS2_CICD/dashboard_artifacts/
 
         env:
