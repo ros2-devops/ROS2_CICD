@@ -5,7 +5,7 @@ import glob
 
 # ───── Config ─────
 artifact_dir = "dashboard_artifacts"
-merged_data = "data_store/ros_metrics_all.csv"
+merged_data = "data_store/ros_metrics_merged_full.csv"
 results = []
 
 # ───── Load Ground Truth ─────

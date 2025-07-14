@@ -5,7 +5,7 @@ from tensorflow.keras.models import load_model
 
 scenario  = os.getenv("SCENARIO", "unknown")
 selector  = os.getenv("AI_MODEL", "cnn_lstm").lower()
-MODEL_DIR = "trained_models"
+MODEL_DIR = "data_store/trained_models"
 
 csv_path   = f"ros_metrics_{scenario}.csv"
 result_txt = f"anomaly_result_{selector}_{scenario}.txt"
