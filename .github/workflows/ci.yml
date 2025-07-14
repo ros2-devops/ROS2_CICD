@@ -60,7 +60,7 @@ jobs:
           source ros2_ws/install/setup.bash
           echo "[CI] Launching simulation..."
           export SCENARIO=${{ matrix.scenario }}
-          timeout 3m ros2 launch sim_demo webots_sim.launch.py duration:=3m log_interval:=0.5 scenario:=$SCENARIO || [[ $? == 124 ]]
+          timeout 5m ros2 launch sim_demo webots_sim.launch.py duration:=5m log_interval:=0.5 scenario:=$SCENARIO || [[ $? == 124 ]]
           echo "[CI] Simulation complete"
           RESULT_FILE=assertion_result_${{ matrix.scenario }}.txt
           if [[ -f "$RESULT_FILE" ]]; then

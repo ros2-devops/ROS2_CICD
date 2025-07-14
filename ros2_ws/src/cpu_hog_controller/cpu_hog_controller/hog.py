@@ -28,7 +28,7 @@ class CpuHog(Node):
     def burn_cpu(self):
         # Burn CPU for a very short slice of time to keep it responsive
         for _ in range(10000):
-            _ = sum(i * i for i in range(10000))
+            _ = sum(i * i for i in range(100000))
 
 def main(args=None):
     rclpy.init(args=args)
