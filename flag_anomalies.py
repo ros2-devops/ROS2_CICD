@@ -31,6 +31,12 @@ df = df[feature_cols].dropna()
 model_path = os.path.join(MODEL_DIR, model_file)
 thresh_path = os.path.join(MODEL_DIR, thresh_file) if thresh_file else None
 
+if selector == "iforest":
+    model = joblib.load(model_path)
+elif selector in ["ae", "cnn_lstm"]:
+    model = load_model(model_path)
+
+
 # Load and scale input
 scaler = joblib.load(os.path.join(MODEL_DIR, "scaler.pkl"))
 X = scaler.transform(df[feature_cols].values.astype(np.float32))
