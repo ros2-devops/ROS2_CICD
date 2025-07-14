@@ -21,125 +21,108 @@ model_files = {
 }
 model_file, thresh_file = model_files.get(selector, model_files["cnn_lstm"])
 
-# ───────── check input ─────────
-def need(path, msg): 
-    if not os.path.exists(path): sys.exit(msg)
+# ───────── Load data ─────────
+if not os.path.exists(csv_path):
+    sys.exit(f"Missing input CSV: {csv_path}")
+df = pd.read_csv(csv_path)
+df = df[feature_cols].dropna()
 
-need(csv_path, f"{csv_path} not found")
-need(MODEL_DIR, "trained_models/ folder missing")
-need(os.path.join(MODEL_DIR, model_file),  f"{model_file} not found")
-need(os.path.join(MODEL_DIR, "scaler.pkl"), "trained_models/scaler.pkl not found")
-if thresh_file:
-    need(os.path.join(MODEL_DIR, thresh_file), f"{thresh_file} missing")
+# ───────── Load model ─────────
+model_path = os.path.join(MODEL_DIR, model_file)
+thresh_path = os.path.join(MODEL_DIR, thresh_file) if thresh_file else None
 
-# ───────── ingest ─────────
-df = (
-    pd.read_csv(csv_path, usecols=["Time"] + feature_cols)
-      .apply(pd.to_numeric, errors="coerce")
-      .dropna()
-)
-if df.empty: sys.exit("No usable rows in cleaned DataFrame")
-
-scaler = joblib.load(os.path.join(MODEL_DIR, "scaler.pkl"))
-X_scaled = scaler.transform(df[feature_cols])
-
-# ───────── inference ─────────
 if selector == "iforest":
-    model = joblib.load(os.path.join(MODEL_DIR, model_file))
-    df["anomaly"] = model.predict(X_scaled)  # -1 = anomaly
-
+    model = joblib.load(model_path)
+    scores = -model.decision_function(df)
+    preds  = model.predict(df)
+    is_anomaly = preds == 1
+    threshold = None
 else:
+    model = load_model(model_path)
+    X = df.values.astype(np.float32)
+    X = X.reshape((X.shape[0], 1, X.shape[1]))
+    recon = model.predict(X, verbose=0)
+    errors = np.mean(np.square(X.squeeze() - recon.squeeze()), axis=1)
+    if thresh_file:
+        threshold = joblib.load(thresh_path)
+    else:
+        threshold = np.percentile(errors, 95)
+    is_anomaly = errors > threshold
+    scores = errors
 
-    model = load_model(os.path.join(MODEL_DIR, model_file))
+# ───────── Add context to anomalies ─────────
+df_result = df.copy()
+df_result["anomaly"] = is_anomaly
+if selector != "iforest":
+    df_result["recon_error"] = scores
+else:
+    df_result["iforest_score"] = scores
 
-    if selector == "cnn_lstm":
-        STEP = 20
-        pad = STEP - (len(X_scaled) % STEP)
-        Xp = np.vstack([X_scaled, np.tile(X_scaled[-1], (pad, 1))])
-        Xseq = Xp.reshape(-1, STEP, X_scaled.shape[1])
-        recon = model.predict(Xseq, verbose=0).reshape(-1, X_scaled.shape[1])[:len(X_scaled)]
+# Add basic context
+if "Time" in df.columns:
+    df_result["Time"] = pd.to_datetime(df["Time"], errors="coerce")
+else:
+    df_result["Time"] = pd.date_range(start=datetime.now(), periods=len(df_result), freq="S")
 
-    elif selector == "ae":
-        recon = model.predict(X_scaled, verbose=0)
+df_result["Scenario"] = scenario
 
-    errs = np.mean((recon - X_scaled) ** 2, axis=1)
-    # Dynamically set threshold to 99th percentile
-    thresh = np.percentile(errs, 99)
+# Explanation per anomaly row
+explanations = []
+for idx, row in df_result.iterrows():
+    if not row["anomaly"]:
+        explanations.append("")
+        continue
+    reasons = []
+    if row["CPU"] > 80:
+        reasons.append("High CPU")
+    if row["CPU_slope"] > 20:
+        reasons.append("CPU spike")
+    if row["Memory"] > 80:
+        reasons.append("High Memory")
+    if row["Mem_slope"] > 20:
+        reasons.append("Memory spike")
+    if selector != "iforest" and row["recon_error"] > threshold:
+        reasons.append("High recon error")
+    explanations.append(" + ".join(reasons))
 
-    df["anomaly"] = (errs > thresh).astype(int) * -1
+df_result["explanation"] = explanations
 
-    #errs = np.mean((recon - X_scaled) ** 2, axis=1)
-    #df["anomaly"] = (errs > thresh).astype(int) * -1
+# ───────── Output files ─────────
+anom_count = df_result["anomaly"].sum()
+with open(result_txt, "w") as f:
+    f.write(f"Model: {selector}\nScenario: {scenario}\nAnomalies flagged: {anom_count} / {len(df_result)}\n")
+    f.write(f"Threshold: {threshold if threshold else 'N/A'}\n")
 
-    # ───────── diagnostics ─────────
-    print(f"[{selector}] Threshold = {thresh:.4f}")
-    print(f"[{selector}] Mean MSE  = {errs.mean():.4f}")
-    print(f"[{selector}] Max  MSE  = {errs.max():.4f}")
-    print(f"[{selector}] Anomaly % = {(df['anomaly'] == -1).mean() * 100:.2f}%")
-    print("\nSample inputs vs reconstructions:")
-    for i in range(min(3, len(X_scaled))):
-        print(f"  Input {i}: {X_scaled[i]}")
-        print(f"  Recon {i}: {recon[i]}\n")
+# Save detailed anomaly log
+df_result.to_csv(log_path, index=False)
 
-    # ───────── plot reconstruction error ─────────
-    plt.figure(figsize=(6, 3))
-    plt.hist(errs, bins=50, color="gray")
-    plt.axvline(thresh, color="red", linestyle="--", label="Threshold")
-    plt.title(f"Reconstruction Error ({selector} - {scenario})")
-    plt.xlabel("MSE"); plt.ylabel("Count")
+# ───────── Plots ─────────
+fig, ax = plt.subplots(figsize=(12, 5))
+ax.plot(df_result.index, df_result["CPU"], label="CPU")
+ax.plot(df_result.index, df_result["Memory"], label="Memory")
+ax.scatter(df_result[df_result["anomaly"]].index,
+           df_result[df_result["anomaly"]]["CPU"],
+           color="red", label="Anomaly", zorder=10)
+ax.set_title(f"Anomaly Detection: {selector} on {scenario}")
+ax.set_xlabel("Time Index")
+ax.set_ylabel("% Usage")
+ax.legend()
+plt.tight_layout()
+plt.savefig(plot_path)
+
+# Optional: plot reconstruction error if DL model
+if selector != "iforest":
+    fig2, ax2 = plt.subplots(figsize=(10, 4))
+    ax2.plot(df_result.index, df_result["recon_error"], label="Recon Error")
+    ax2.axhline(y=threshold, color="red", linestyle="--", label="Threshold")
+    ax2.scatter(df_result[df_result["anomaly"]].index,
+                df_result[df_result["anomaly"]]["recon_error"],
+                color="orange", label="Flagged")
+    ax2.set_title("Reconstruction Error over Time")
+    ax2.set_xlabel("Time Index")
+    ax2.set_ylabel("MSE")
+    ax2.legend()
     plt.tight_layout()
     plt.savefig(recon_plot)
 
-    plt.hist(errs, bins=50, alpha=0.7)
-    plt.axvline(thresh, color='r', linestyle='--', label='Threshold')
-    plt.title(f'MSE Histogram – {selector} ({scenario})')
-    plt.xlabel("MSE"); plt.ylabel("Count")
-    plt.legend()
-    plt.tight_layout()
-    plt.savefig(f"debug_mse_{selector}_{scenario}.png")
-
-# ───────── reporting ─────────
-n_anom = int((df["anomaly"] == -1).sum())
-p_anom = n_anom / len(df) * 100 if len(df) > 0 else 0
-action = "Investigate resource trend" if n_anom else "No action"
-atype  = "Resource-trend" if n_anom else "None"
-
-with open(result_txt, "w") as f:
-    f.write(f"ANOMALY DETECTED\nCount: {n_anom}\nShare: {p_anom:.2f} %\nType: {atype}\nAI Action: {action}\n" if n_anom
-            else "NO ANOMALY\nAI Action: No action\n")
-
-# ───────── plot anomalies ─────────
-t, cpu = df["Time"].to_numpy(), df["CPU"].to_numpy()
-mask   = df["anomaly"].to_numpy() == -1
-
-plt.switch_backend("Agg")
-plt.figure(figsize=(8,3))
-plt.plot(t, cpu, lw=0.6, label="CPU %")
-plt.scatter(t[mask], cpu[mask], c="red", s=8, label="Anomaly", zorder=5)
-plt.xlabel("Time (s)"); plt.ylabel("CPU %")
-plt.title(f"CPU Anomalies – {scenario} ({selector})")
-plt.legend(); plt.tight_layout()
-plt.savefig(plot_path)
-
-
-
-
-# ───────── log ─────────
-log_head = "Timestamp,Scenario,Model,AnomalyCount,AnomalyPct,AnomalyType,AI_Action\n"
-log_row  = f"{datetime.now().isoformat()},{scenario},{selector},{n_anom},{p_anom:.2f},{atype},{action}\n"
-first = not os.path.exists(log_path)
-
-
-
-# ───────── append flagged data to anomaly log ─────────
-with open(log_path, "a") as f:
-    if first:
-        f.write(log_head)
-
-    f.write(log_row)
-
-    if n_anom:
-        flagged_csv = f"anomaly_summary_{selector}_{scenario}.csv"
-        df_flagged = df[df["anomaly"] == -1].copy()
-        df_flagged["Model"] = selector
-        df_flagged.to_csv(flagged_csv, index=False)
+print(f"Anomaly results saved to {log_path} with {anom_count} anomalies.")
