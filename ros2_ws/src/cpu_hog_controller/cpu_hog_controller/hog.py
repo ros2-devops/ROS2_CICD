@@ -12,8 +12,8 @@ class CpuHog(Node):
         threading.Thread(target=self.stress_loop, daemon=True).start()
 
     def stress_loop(self):
-        cycle_duration = 10  # every 10 seconds
-        stress_duration = 3  # stress lasts for 3 seconds
+        cycle_duration = 15  # every 10 seconds
+        stress_duration = 5  # stress lasts for 3 seconds
 
         while rclpy.ok():
             now = time.time()
@@ -27,7 +27,7 @@ class CpuHog(Node):
 
     def burn_cpu(self):
         # Burn CPU for a very short slice of time to keep it responsive
-        for _ in range(1000):
+        for _ in range(10000):
             _ = sum(i * i for i in range(10000))
 
 def main(args=None):
