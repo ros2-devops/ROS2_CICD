@@ -31,24 +31,41 @@ df = df[feature_cols].dropna()
 model_path = os.path.join(MODEL_DIR, model_file)
 thresh_path = os.path.join(MODEL_DIR, thresh_file) if thresh_file else None
 
-if selector == "iforest":
-    model = joblib.load(model_path)
-    scores = -model.decision_function(df)
-    preds  = model.predict(df)
-    is_anomaly = preds == 1
-    threshold = None
-else:
-    model = load_model(model_path)
-    X = df.values.astype(np.float32)
-    X = X.reshape((X.shape[0], 1, X.shape[1]))
-    recon = model.predict(X, verbose=0)
-    errors = np.mean(np.square(X.squeeze() - recon.squeeze()), axis=1)
-    if thresh_file:
-        threshold = joblib.load(thresh_path)
-    else:
-        threshold = np.percentile(errors, 95)
+# Load and scale input
+scaler = joblib.load(os.path.join(MODEL_DIR, "scaler.pkl"))
+X = scaler.transform(df[feature_cols].values.astype(np.float32))
+
+if selector == "cnn_lstm":
+    # Pad to match training shape (multiples of 30)
+    STEP = 30
+    pad = STEP - (len(X) % STEP)
+    X_pad = np.vstack([X, np.tile(X[-1], (pad, 1))])
+    X_seq = X_pad.reshape(-1, STEP, X.shape[1])
+    
+    # Predict and reconstruct
+    recon = model.predict(X_seq).reshape(-1, X.shape[1])[:len(X)]
+    errors = np.mean(np.square(X - recon), axis=1)
+    
+    threshold = joblib.load(thresh_path) if thresh_file else np.percentile(errors, 95)
     is_anomaly = errors > threshold
     scores = errors
+
+elif selector == "ae":
+    recon = model.predict(X, verbose=0)
+    errors = np.mean(np.square(X - recon), axis=1)
+    
+    threshold = joblib.load(thresh_path) if thresh_file else np.percentile(errors, 95)
+    is_anomaly = errors > threshold
+    scores = errors
+
+elif selector == "iforest":
+    preds = model.predict(X)  # -1 for anomaly, 1 for normal
+    errors = np.where(preds == -1, 1, 0)
+    is_anomaly = preds == -1
+    scores = -model.decision_function(X)
+    threshold = None
+
+
 
 # ───────── Add context to anomalies ─────────
 df_result = df.copy()
