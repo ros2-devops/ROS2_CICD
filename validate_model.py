@@ -1,54 +1,49 @@
+#!/usr/bin/env python3
 import pandas as pd
-import joblib
-import matplotlib.pyplot as plt
 import os
+import glob
 
-CSV_PATH = "data_store/ros_metrics_all.csv"
-MODEL_PATH = "anomaly_model.pkl"
+# ───── Config ─────
+artifact_dir = "dashboard_artifacts"
+merged_data = "data_store/ros_metrics_all.csv"
+results = []
 
-# Load data
-df = pd.read_csv(CSV_PATH, header=None, names=["Time", "CPU", "Memory"])
+# ───── Load Ground Truth ─────
+df_truth = pd.read_csv(merged_data)
+df_truth["true_anomaly"] = ((df_truth["CPU_viol"] > 0) | (df_truth["Mem_viol"] > 0)).astype(int)
 
-# Convert numeric
-df["CPU"] = pd.to_numeric(df["CPU"], errors="coerce")
-df["Memory"] = pd.to_numeric(df["Memory"], errors="coerce")
+# ───── Evaluate Each Model ─────
+for model in ["iforest", "ae", "cnn_lstm"]:
+    for file in glob.glob(f"{artifact_dir}/anomaly_result_log_{model}_*.csv"):
+        scenario = file.split(f"anomaly_result_log_{model}_")[1].replace(".csv", "")
+        df_pred = pd.read_csv(file)
 
-# Drop bad rows
-df = df.dropna()
-print(f" Loaded {len(df)} rows after cleaning")
+        if len(df_pred) != len(df_truth):
+            print(f"[⚠️] Skipping {file}: length mismatch with ground truth")
+            continue
 
-# Normalize
-df["cpu_norm"] = df["CPU"] / df["CPU"].max()
+        df_eval = df_pred.copy()
+        df_eval["true_anomaly"] = df_truth["true_anomaly"].values
 
-# Check empty
-if df.empty:
-    print(" ERROR: DataFrame is empty after cleaning. Cannot evaluate model.")
-    exit(1)
+        tp = ((df_eval["anomaly"] == 1) & (df_eval["true_anomaly"] == 1)).sum()
+        fp = ((df_eval["anomaly"] == 1) & (df_eval["true_anomaly"] == 0)).sum()
+        tn = ((df_eval["anomaly"] == 0) & (df_eval["true_anomaly"] == 0)).sum()
+        fn = ((df_eval["anomaly"] == 0) & (df_eval["true_anomaly"] == 1)).sum()
 
-# Load model
-if not os.path.exists(MODEL_PATH):
-    print(f" {MODEL_PATH} not found")
-    exit(1)
+        precision = tp / (tp + fp) if tp + fp > 0 else 0.0
+        recall    = tp / (tp + fn) if tp + fn > 0 else 0.0
+        f1        = 2 * (precision * recall) / (precision + recall) if precision + recall > 0 else 0.0
 
-model = joblib.load(MODEL_PATH)
-df["anomaly"] = model.predict(df[["cpu_norm"]])
+        results.append({
+            "Model": model,
+            "Scenario": scenario,
+            "TP": tp, "FP": fp, "TN": tn, "FN": fn,
+            "Precision": round(precision, 3),
+            "Recall": round(recall, 3),
+            "F1": round(f1, 3)
+        })
 
-# Print summary
-total = len(df)
-anomalies = (df["anomaly"] == -1).sum()
-print(f" Model evaluated on {total} samples")
-print(f" Anomalies detected: {anomalies} ({100 * anomalies / total:.1f}%)")
-
-# Plot
-plt.figure()
-plt.plot(df["Time"], df["CPU"], label="CPU %")
-plt.scatter(df["Time"][df["anomaly"] == -1],
-            df["CPU"][df["anomaly"] == -1],
-            color="red", label="Anomaly", zorder=5)
-plt.xlabel("Time")
-plt.ylabel("CPU (%)")
-plt.title("Anomaly Detection – Training Data")
-plt.legend()
-plt.tight_layout()
-plt.savefig("training_anomaly_plot.png")
-print(" Saved training_anomaly_plot.png")
+# ───── Output Results ─────
+df_results = pd.DataFrame(results)
+df_results.to_csv(f"{artifact_dir}/evaluation_summary_all_models.csv", index=False)
+print("✅ Evaluation complete → evaluation_summary_all_models.csv")
