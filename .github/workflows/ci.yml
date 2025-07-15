@@ -167,8 +167,17 @@ jobs:
           ssh-keyscan "$VM_HOST" >> ~/.ssh/known_hosts
         env:
           SSH_KEY_B64: ${{ secrets.SSH_KEY_B64 }}
-          VM_HOST: 35.246.34.109
+          VM_HOST: 35.246.50.218
       
+
+      - name: Save input metrics used for AI
+        run: |
+          cp ros_metrics_${{ matrix.scenario }}.csv \
+            dashboard_artifacts/ros_metrics_input_${{ matrix.scenario }}.csv
+
+      - name: Validate Anomaly Detection Output
+        run: |
+          python3 validate_model.py
       
       - name: Upload to Dashboard VM
         if: always()
@@ -182,7 +191,9 @@ jobs:
 
         env:
           VM_USER: ec24136
-          VM_HOST: 35.246.34.109
+          VM_HOST: 35.246.50.218
+
+
 
 
   docker:

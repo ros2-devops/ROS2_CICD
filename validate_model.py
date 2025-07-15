@@ -5,36 +5,32 @@ import glob
 
 # ───── Config ─────
 artifact_dir = "dashboard_artifacts"
-merged_data = "data_store/ros_metrics_merged_full.csv"
 results = []
 
-# ───── Load Ground Truth ─────
-if not os.path.exists(merged_data):
-    raise FileNotFoundError(f"Ground truth file not found: {merged_data}")
-
-df_truth = pd.read_csv(merged_data)
-df_truth["true_anomaly"] = ((df_truth["CPU_viol"] > 0) | (df_truth["Mem_viol"] > 0)).astype(int)
-print(f"[INFO] Ground truth loaded: {len(df_truth)} rows")
-
-# ───── Evaluate Each Model ─────
+# ───── Evaluate Each Model's Output ─────
 for model in ["iforest", "ae", "cnn_lstm"]:
     pattern = os.path.join(artifact_dir, f"anomaly_result_log_{model}_*.csv")
-    for file in glob.glob(pattern):
-        scenario = file.split(f"anomaly_result_log_{model}_")[1].replace(".csv", "")
+    for pred_file in glob.glob(pattern):
+        scenario = pred_file.split(f"anomaly_result_log_{model}_")[1].replace(".csv", "")
+        input_file = os.path.join(artifact_dir, f"ros_metrics_input_{scenario}.csv")
+
+        print(f"[…] Evaluating {pred_file}")
+        if not os.path.exists(input_file):
+            print(f"[⚠️] Skipping {pred_file}: input file {input_file} not found")
+            continue
+
         try:
-            df_pred = pd.read_csv(file)
+            df_pred = pd.read_csv(pred_file)
+            df_truth = pd.read_csv(input_file)
         except Exception as e:
-            print(f"[❌] Could not load {file}: {e}")
+            print(f"[❌] Failed to load files for {scenario}: {e}")
             continue
 
-        print(f"[…] Evaluating {file} (rows={len(df_pred)})")
-
-        # Check alignment
         if len(df_pred) != len(df_truth):
-            print(f"[⚠️] Skipping {file}: length mismatch (pred={len(df_pred)} vs truth={len(df_truth)})")
+            print(f"[⚠️] Skipping {pred_file}: length mismatch (pred={len(df_pred)} vs truth={len(df_truth)})")
             continue
 
-        # Evaluate
+        df_truth["true_anomaly"] = ((df_truth["CPU_viol"] > 0) | (df_truth["Mem_viol"] > 0)).astype(int)
         df_eval = df_pred.copy()
         df_eval["true_anomaly"] = df_truth["true_anomaly"].values
 
@@ -59,7 +55,8 @@ for model in ["iforest", "ae", "cnn_lstm"]:
 # ───── Output Results ─────
 if results:
     df_results = pd.DataFrame(results)
-    df_results.to_csv(f"{artifact_dir}/evaluation_summary_all_models.csv", index=False)
-    print(f"\n✅ Evaluation complete → {artifact_dir}/evaluation_summary_all_models.csv")
+    out_path = os.path.join(artifact_dir, "evaluation_summary_all_models.csv")
+    df_results.to_csv(out_path, index=False)
+    print(f"✅ Evaluation complete → {out_path}")
 else:
-    print("🚫 No results to write. All evaluations skipped due to length mismatch.")
+    print("🚫 No results to write. All evaluations skipped.")
