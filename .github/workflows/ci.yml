@@ -179,21 +179,19 @@ jobs:
         run: |
           python3 validate_model.py
       
-      - name: Upload to Dashboard VM
-        if: always()
-        run: |
-          find ai_anomaly_result_* -type f -exec cp {} . \;
-          scp -i ~/.ssh/gha_key \
-          evaluation_summary_*.txt best_model_*.md \
-          simulation_log_*.csv \
-          anomaly_result_log_*_*.csv anomaly_plot_*_*.png \
-          $VM_USER@$VM_HOST:~/ROS2_CICD/dashboard_artifacts/
+      # - name: Upload to Dashboard VM
+      #   if: always()
+      #   run: |
+      #     find ai_anomaly_result_* -type f -exec cp {} . \;
+      #     scp -i ~/.ssh/gha_key \
+      #     evaluation_summary_*.txt best_model_*.md \
+      #     simulation_log_*.csv \
+      #     anomaly_result_log_*_*.csv anomaly_plot_*_*.png \
+      #     $VM_USER@$VM_HOST:~/ROS2_CICD/dashboard_artifacts/
 
-        env:
-          VM_USER: ec24136
-          VM_HOST: 35.246.50.218
-
-
+      #   env:
+      #     VM_USER: ec24136
+      #     VM_HOST: 35.246.50.218
 
 
   docker:
