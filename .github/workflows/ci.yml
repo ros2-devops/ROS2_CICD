@@ -172,6 +172,7 @@ jobs:
 
       - name: Save input metrics used for AI
         run: |
+          mkdir -p dashboard_artifacts
           cp ros_metrics_${{ matrix.scenario }}.csv \
             dashboard_artifacts/ros_metrics_input_${{ matrix.scenario }}.csv
 
