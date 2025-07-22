@@ -1,2 +1,0 @@
-Invoking command in '/home/ec24136/ROS2_CICD/ros2_ws/build/cpu_hog_controller': /usr/bin/cmake /home/ec24136/ROS2_CICD/ros2_ws/src/cpu_hog_controller -DCATKIN_INSTALL_INTO_PREFIX_ROOT=0 -DCMAKE_INSTALL_PREFIX=/home/ec24136/ROS2_CICD/ros2_ws/install/cpu_hog_controller
-Invoked command in '/home/ec24136/ROS2_CICD/ros2_ws/build/cpu_hog_controller' returned '1': /usr/bin/cmake /home/ec24136/ROS2_CICD/ros2_ws/src/cpu_hog_controller -DCATKIN_INSTALL_INTO_PREFIX_ROOT=0 -DCMAKE_INSTALL_PREFIX=/home/ec24136/ROS2_CICD/ros2_ws/install/cpu_hog_controller

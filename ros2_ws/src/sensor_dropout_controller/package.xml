@@ -1,0 +1,11 @@
+<?xml version='1.0'?>
+<package format='3'>
+  <name>sensor_dropout_controller</name>
+  <version>0.0.1</version>
+  <description>Simulates sensor dropout</description>
+  <maintainer email='ec24136@qmul.ac.uk'>ec24136</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <exec_depend>rclpy</exec_depend>
+</package>

@@ -1,2 +1,0 @@
-[0.030s] Invoking command in '/home/ec24136/ROS2_CICD/ros2_ws/build/hello_pipeline_cpp': CMAKE_PREFIX_PATH=/opt/ros/jazzy /usr/bin/cmake --build /home/ec24136/ROS2_CICD/ros2_ws/build/hello_pipeline_cpp -- -j2 -l2
-[0.365s] [100%] Built target hello_node

@@ -89,14 +89,18 @@ RUN apt-get update && apt-get install -y \
 COPY --from=builder /ros2_ws/install /ros2_ws/install
 
 # Entrypoint (head-less Webots sim)
-ENTRYPOINT ["/bin/bash", "-c", \
-  "source /opt/ros/humble/setup.bash && \
-   source /ros2_ws/install/setup.bash && \
-   ros2 launch sim_demo webots_sim.launch.py"]
+
+ENTRYPOINT ["/bin/bash", "-c", "source /opt/ros/humble/setup.bash && source /ros2_ws/install/setup.bash && exec bash"]
+
+# ENTRYPOINT ["/bin/bash", "-c", \
+#   "source /opt/ros/humble/setup.bash && \
+#    source /ros2_ws/install/setup.bash && \
+#    exec '$@'"]
+#    #ros2 launch sim_demo webots_sim.launch.py"]
 
 # ───  dashboard stage  ───────────────────────────────────────
-FROM python:3.10-slim AS dashboard
-WORKDIR /dash
-COPY dashboard /dash
-RUN pip install --no-cache-dir streamlit pandas
-ENTRYPOINT ["streamlit", "run", "app.py", "--server.headless=true", "--server.port=8501"]
+# FROM python:3.10-slim AS dashboard
+# WORKDIR /dash
+# COPY dashboard /dash
+# RUN pip install --no-cache-dir streamlit pandas
+# ENTRYPOINT ["streamlit", "run", "app.py", "--server.headless=true", "--server.port=8501"]

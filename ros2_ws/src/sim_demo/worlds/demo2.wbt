@@ -21,7 +21,7 @@ RectangleArena {
 TurtleBot3Burger {
   translation -1 0.5 0.05
   name "bot1"
-  controller "slam_node"
+  controller "cpu_hog"
   children [
     Laser {
       name "laser"
@@ -33,7 +33,7 @@ TurtleBot3Burger {
 TurtleBot3Burger {
   translation 1 -0.5 0.05
   name "bot2"
-  controller "hog"
+  controller "ram_hog"
   children [
     Camera {
       name "high_res_camera"

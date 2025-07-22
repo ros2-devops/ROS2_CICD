@@ -1,78 +1,140 @@
 #!/usr/bin/env python3
 import os
-import pandas as pd
-import numpy as np
+import json
 import joblib
-from sklearn.ensemble import IsolationForest
-from sklearn.preprocessing import StandardScaler
+import numpy as np
+import pandas as pd
 from sklearn.model_selection import train_test_split
-import matplotlib.pyplot as plt
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import IsolationForest
+from sklearn.metrics import classification_report
+
+import tensorflow as tf
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Input, Dense, LSTM, TimeDistributed
-from tensorflow.keras import regularizers
+from tensorflow.keras.layers import Input, Dense, LSTM, Conv1D, MaxPooling1D
 from tensorflow.keras.callbacks import EarlyStopping
 
-CSV_PATH = "data_store/ros_metrics_all.csv"
-FEATURE_COLS = ["CPU", "Memory", "CPU_roll", "CPU_slope", "Mem_roll", "Mem_slope"]
-MODEL_DIR = "trained_models"
+# ─── Config ─────────────────────────────────────────────
+INPUT_CSV = "data_training_full/ros_metrics_relabelled.csv"
+MODEL_DIR = "trained_models_new"
 os.makedirs(MODEL_DIR, exist_ok=True)
 
-df = pd.read_csv(CSV_PATH, usecols=FEATURE_COLS).dropna()
+print("📦 Loading dataset...")
+df = pd.read_csv(INPUT_CSV)
+df = df.drop(columns=["Time", "Scenario", "Run"])
+
+X = df.drop(columns=["Anomaly"])
+y = df["Anomaly"]
+
 scaler = StandardScaler()
-X_scaled = scaler.fit_transform(df)
-joblib.dump(scaler, f"{MODEL_DIR}/scaler.pkl")
+X_scaled = scaler.fit_transform(X)
 
-# Isolation Forest
-iso = IsolationForest(contamination=0.05, random_state=42)
-iso.fit(X_scaled)
-joblib.dump(iso, f"{MODEL_DIR}/anomaly_model_iforest.pkl")
+print("🔀 Splitting dataset...")
+X_train, X_test, y_train, y_test = train_test_split(
+    X_scaled, y, test_size=0.2, stratify=y, random_state=42
+)
 
-# Autoencoder
-X_train, X_val = train_test_split(X_scaled, test_size=0.2, random_state=42)
-input_dim = X_train.shape[1]
+X_train_clean = X_train[y_train == 0]
 
-inp = Input(shape=(input_dim,))
-enc = Dense(4, activation='relu', activity_regularizer=regularizers.l1(1e-5))(inp)
-dec = Dense(input_dim, activation='linear')(enc)
-ae = Model(inp, dec)
-ae.compile(optimizer='adam', loss='mse')
-ae.fit(X_train, X_train, epochs=100, batch_size=32, validation_data=(X_val, X_val),
-       callbacks=[EarlyStopping(patience=5, restore_best_weights=True)], verbose=1)
-ae.save(f"{MODEL_DIR}/anomaly_model_ae.keras")
+# ─── Isolation Forest ──────────────────────────────────
+print("🌲 Training Isolation Forest...")
+iforest = IsolationForest(contamination=0.36, random_state=42)
+iforest.fit(X_train_clean)
+y_pred_iforest = iforest.predict(X_test)
+y_pred_iforest = np.where(y_pred_iforest == -1, 1, 0)
 
-recon = ae.predict(X_val)
-mse = np.mean((X_val - recon) ** 2, axis=1)
-th = np.percentile(mse, 95)
-joblib.dump(th, f"{MODEL_DIR}/ae_threshold.pkl")
 
-# CNN-LSTM
-STEP = 30
-pad = STEP - len(X_scaled) % STEP
-X_pad = np.vstack([X_scaled, np.tile(X_scaled[-1], (pad, 1))])
-X_seq = X_pad.reshape(-1, STEP, input_dim)
+# ─── Autoencoder ───────────────────────────────────────
+print("🧠 Training Autoencoder...")
+input_dim = X_train_clean.shape[1]
+input_layer = Input(shape=(input_dim,))
+encoded = Dense(32, activation="relu")(input_layer)
+encoded = Dense(16, activation="relu")(encoded)
+decoded = Dense(32, activation="relu")(encoded)
+decoded = Dense(input_dim, activation="linear")(decoded)
+autoencoder = Model(inputs=input_layer, outputs=decoded)
+autoencoder.compile(optimizer="adam", loss="mse")
 
-inp = Input(shape=(STEP, input_dim))
-x = LSTM(64, return_sequences=True)(inp)
-x = LSTM(32, return_sequences=True)(x)
-out = TimeDistributed(Dense(input_dim))(x)
-lstm = Model(inp, out)
-lstm.compile(optimizer='adam', loss='mse')
-lstm.fit(X_seq, X_seq, epochs=50, batch_size=16, verbose=1)
-lstm.save(f"{MODEL_DIR}/anomaly_model_cnnlstm.keras")
+autoencoder.fit(
+    X_train_clean, X_train_clean,
+    epochs=30, batch_size=64,
+    validation_split=0.2,
+    callbacks=[EarlyStopping(monitor="val_loss", patience=5, restore_best_weights=True)],
+    verbose=1
+)
 
-recon_seq = lstm.predict(X_seq).reshape(-1, input_dim)[:len(X_scaled)]
-mse_cnn = np.mean((X_scaled - recon_seq)**2, axis=1)
-th_cnn = np.percentile(mse_cnn, 95)
-joblib.dump(th_cnn, f"{MODEL_DIR}/cnn_lstm_threshold.pkl")
 
-# Plot thresholds
-plt.hist(mse, bins=50, color="gray")
-plt.axvline(th, color="red", linestyle="--", label="AE Threshold")
-plt.title("AE Reconstruction Error")
-plt.savefig("ae_threshold_debug.png")
+recon_errors = np.mean(np.square(X_test - autoencoder.predict(X_test, verbose=0)), axis=1)
+ae_threshold = np.percentile(recon_errors, 100 * (1 - y_test.mean()))
+y_pred_ae = (recon_errors > ae_threshold).astype(int)
 
-plt.figure()
-plt.hist(mse_cnn, bins=50, color="gray")
-plt.axvline(th_cnn, color="blue", linestyle="--", label="CNN-LSTM Threshold")
-plt.title("CNN-LSTM Reconstruction Error")
-plt.savefig("cnn_lstm_threshold_debug.png")
+# ─── CNN-LSTM ───────────────────────────────────────────
+print("📈 Preparing data for CNN-LSTM...")
+SEQ_LEN = 20
+features = X_scaled.shape[1]
+X_seq, y_seq = [], []
+
+for i in range(len(X_scaled) - SEQ_LEN):
+    X_seq.append(X_scaled[i:i+SEQ_LEN])
+    y_seq.append(y.iloc[i+SEQ_LEN-1])
+
+X_seq = np.array(X_seq)
+y_seq = np.array(y_seq)
+
+X_seq_train, X_seq_test, y_seq_train, y_seq_test = train_test_split(
+    X_seq, y_seq, test_size=0.2, random_state=42, stratify=y_seq
+)
+
+print("🌀 Training CNN-LSTM...")
+model_input = Input(shape=(SEQ_LEN, features))
+x = Conv1D(filters=32, kernel_size=3, activation="relu")(model_input)
+x = MaxPooling1D(pool_size=2)(x)
+x = LSTM(32)(x)
+x = Dense(16, activation="relu")(x)
+output = Dense(1, activation="sigmoid")(x)
+
+cnn_lstm = Model(inputs=model_input, outputs=output)
+cnn_lstm.compile(optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"])
+cnn_lstm.fit(
+    X_seq_train, y_seq_train,
+    epochs=10, batch_size=64,
+    validation_split=0.2,
+    callbacks=[EarlyStopping(monitor="val_loss", patience=3, restore_best_weights=True)],
+    verbose=1
+)
+
+y_pred_lstm = (cnn_lstm.predict(X_seq_test, verbose=0) > 0.5).astype(int)
+
+# ─── Evaluation ────────────────────────────────────────
+print("🧾 Generating evaluation report...")
+results = {
+    "Isolation Forest": classification_report(y_test, y_pred_iforest, output_dict=True),
+    "Autoencoder": classification_report(y_test, y_pred_ae, output_dict=True),
+    "CNN-LSTM": classification_report(y_seq_test, y_pred_lstm, output_dict=True)
+}
+
+with open(os.path.join(MODEL_DIR, "model_eval_report.json"), "w") as f:
+    json.dump(results, f, indent=2)
+
+# ─── Save Isolation Forest ───
+joblib.dump(iforest, os.path.join(MODEL_DIR, "isolation_forest_model.pkl"))
+
+# ─── Save Autoencoder and threshold ───
+autoencoder.save(os.path.join(MODEL_DIR, "autoencoder_model.keras"))
+with open(os.path.join(MODEL_DIR, "autoencoder_threshold.pkl"), "wb") as f:
+    joblib.dump(ae_threshold, f)
+
+# ─── Save CNN-LSTM and threshold ───
+cnn_lstm.save(os.path.join(MODEL_DIR, "cnn_lstm_model.keras"))
+
+# Use the same threshold logic for CNN-LSTM
+cnn_scores = cnn_lstm.predict(X_seq_test, verbose=0).flatten()
+cnn_threshold = np.percentile(cnn_scores, 100 * (1 - y_seq_test.mean()))
+with open(os.path.join(MODEL_DIR, "cnn_lstm_threshold.pkl"), "wb") as f:
+    joblib.dump(cnn_threshold, f)
+
+# ─── Save Scaler ───
+joblib.dump(scaler, os.path.join(MODEL_DIR, "scaler.pkl"))
+
+
+print("✅ Training complete. Artifacts saved to:", MODEL_DIR)

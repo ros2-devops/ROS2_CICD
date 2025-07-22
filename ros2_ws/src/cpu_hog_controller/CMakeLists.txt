@@ -2,10 +2,12 @@ cmake_minimum_required(VERSION 3.5)
 project(cpu_hog_controller)
 
 find_package(ament_cmake REQUIRED)
+find_package(rclpy REQUIRED)
 
 install(
-  DIRECTORY cpu_hog_controller
-  DESTINATION lib/python3.10/site-packages
+  PROGRAMS
+    cpu_hog_controller/setup.py
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 ament_package()

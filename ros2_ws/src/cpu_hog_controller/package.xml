@@ -6,12 +6,14 @@
   <maintainer email="ec24136@qmul.ac.uk">ec24136</maintainer>
   <license>MIT</license>
 
-  <buildtool_depend>ament_cmake</buildtool_depend>
+  <!-- This is the correct buildtool for Python packages -->
+  <buildtool_depend>ament_python</buildtool_depend>
+
   <exec_depend>rclpy</exec_depend>
   <exec_depend>psutil</exec_depend>
   <exec_depend>launch</exec_depend>
 
   <export>
-    <!-- no build_type needed -->
+    <build_type>ament_python</build_type>
   </export>
 </package>

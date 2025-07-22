@@ -8,6 +8,7 @@ class CpuHog(Node):
     def __init__(self):
         super().__init__('cpu_hog')
         self.get_logger().info('CPU Hog with bursts started.')
+        print("CPU hog started")
         self.start_time = time.time()
         threading.Thread(target=self.stress_loop, daemon=True).start()
 
@@ -39,3 +40,5 @@ def main(args=None):
         pass
     node.destroy_node()
     rclpy.shutdown()
+if __name__ == '__main__':
+    main()

@@ -1,8 +1,0 @@
-[33mCMake Warning:
-  Ignoring extra path from command line:
-
-   "/home/ec24136/ROS2_CICD/ros2_ws/src/cpu_hog_controller"
-
-[0m
-[0mCMake Error: The source directory "/home/ec24136/ROS2_CICD/ros2_ws/src/cpu_hog_controller" does not appear to contain CMakeLists.txt.
-Specify --help for usage, or press the help button on the CMake GUI.[0m

@@ -1,5 +1,15 @@
-**/__pycache__/
-**/*.pyc
-build/
-install/
-log/
+# .dockerignore
+
+__pycache__/
+*.pyc
+*.log
+*.csv
+*.png
+*.txt
+*.md
+ros2_ws/install
+ros2_ws/build
+ros2_ws/log
+data_training_full/
+*.bag
+

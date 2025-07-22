@@ -167,7 +167,7 @@ jobs:
           ssh-keyscan "$VM_HOST" >> ~/.ssh/known_hosts
         env:
           SSH_KEY_B64: ${{ secrets.SSH_KEY_B64 }}
-          VM_HOST: 35.246.50.218
+          VM_HOST: 34.89.101.59
       
 
       - name: Save input metrics used for AI
@@ -180,20 +180,23 @@ jobs:
         run: |
           python3 validate_model.py
       
-      # - name: Upload to Dashboard VM
-      #   if: always()
-      #   run: |
-      #     find ai_anomaly_result_* -type f -exec cp {} . \;
-      #     scp -i ~/.ssh/gha_key \
-      #     evaluation_summary_*.txt best_model_*.md \
-      #     simulation_log_*.csv \
-      #     anomaly_result_log_*_*.csv anomaly_plot_*_*.png \
-      #     $VM_USER@$VM_HOST:~/ROS2_CICD/dashboard_artifacts/
+      - name: Upload to Dashboard VM
+        if: always()
+        run: |
+          mkdir -p all_uploads
+          find ai_anomaly_result_* -type f -exec cp {} all_uploads/ \;
+          cp evaluation_summary_*.txt all_uploads/ 2>/dev/null || true
+          cp best_model_*.md all_uploads/ 2>/dev/null || true
+          cp simulation_log_*.csv all_uploads/ 2>/dev/null || true
+          cp anomaly_result_log_*_*.csv all_uploads/ 2>/dev/null || true
+          cp anomaly_plot_*_*.png all_uploads/ 2>/dev/null || true
+          cp dashboard_artifacts/ros_metrics_input_*.csv all_uploads/ 2>/dev/null || true
 
-      #   env:
-      #     VM_USER: ec24136
-      #     VM_HOST: 35.246.50.218
-
+          echo "📤 Uploading files to dashboard server..."
+          scp -i ~/.ssh/gha_key all_uploads/* $VM_USER@$VM_HOST:~/ROS2_CICD/dashboard_artifacts/
+        env:
+          VM_USER: ec24136
+          VM_HOST: 34.89.101.59
 
   docker:
     needs: simulate
