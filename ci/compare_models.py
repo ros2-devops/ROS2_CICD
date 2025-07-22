@@ -28,16 +28,17 @@ Path(f"best_model_{SCENARIO}.txt").write_text(
     f"best={best[0]}  anomalies={best[1]} ({best[2]} %)\n"
 )
 
-Path(f"best_model_{SCENARIO}.json").write_text(
+Path(f"best_model_{SCENARIO}.md").write_text(
     "|Model|Anoms|Pct|\n|---|---|---|\n" +
     "\n".join(f"|{m}|{c}|{p:.2f} %|" for m, c, p in rows) +
     f"\n\n**Best → `{best[0]}`**\n"
 )
 
 Path(f"compare_models_{SCENARIO}.json").write_text(json.dumps({
-    "scenario": SCENARIO,
-    "best_model": best[0],
-    "scores": [{"model": m, "anoms": c, "pct": round(p, 2)} for m, c, p in rows]
+    "scenario": str(SCENARIO),
+    "best_model": str(best[0]),
+    "scores": [{"model": str(m), "anoms": int(c), "pct": float(round(p, 2))} for m, c, p in rows]
 }, indent=2))
+
 
 print(f"Best model: {best[0]} with {best[1]} anomalies ({best[2]:.2f}%)")
