@@ -66,5 +66,5 @@ ros2_ws/log/build_2025-07-09_15-44-51/slam_navigation/command.log
 *.txt
 install/_local_setup_util_ps1.py
 ~/ROS2_CICD/ros2_ws/install/
-webots-R2023b-x86-64.tar.bz2
+ros2_ws/webots-R2023b-x86-64.tar.bz2
 ros2_ws/webots-R2023b-x86-64.tar.bz2.1
