@@ -28,7 +28,7 @@ Path(f"best_model_{SCENARIO}.txt").write_text(
     f"best={best[0]}  anomalies={best[1]} ({best[2]} %)\n"
 )
 
-Path(f"best_model_{SCENARIO}.md").write_text(
+Path(f"best_model_{SCENARIO}.json").write_text(
     "|Model|Anoms|Pct|\n|---|---|---|\n" +
     "\n".join(f"|{m}|{c}|{p:.2f} %|" for m, c, p in rows) +
     f"\n\n**Best → `{best[0]}`**\n"
