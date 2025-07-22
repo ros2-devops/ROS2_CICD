@@ -16,7 +16,8 @@ msg/_*.py
 build_isolated/
 devel_isolated/
 dashboard_artifacts/
-
+install/
+log/
 ros2_ws/install
 ros2_ws/log
 

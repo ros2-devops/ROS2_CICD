@@ -14,12 +14,14 @@ plot_path  = f"anomaly_plot_{selector}_{scenario}.png"
 log_path   = f"anomaly_result_log_{selector}_{scenario}.csv"
 recon_plot = f"recon_error_{selector}_{scenario}.png"
 
-# Feature set used during training
+
 feature_cols = [
     "CPU", "Memory", "CPU_roll", "CPU_slope", "Mem_roll", "Mem_slope",
     "CPU_user", "CPU_sys", "CPU_count", "CPU_freq",
-    "Disk_read", "Disk_write", "Net_sent", "Net_recv"
+    "Disk_read", "Disk_write", "Net_sent", "Net_recv",
+    "Temperature", "CPU_viol", "Mem_viol"
 ]
+
 
 model_files = {
     "cnn_lstm": ("cnn_lstm_model.keras", "cnn_lstm_threshold.pkl"),
