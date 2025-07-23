@@ -167,7 +167,7 @@ jobs:
           ssh-keyscan "$VM_HOST" >> ~/.ssh/known_hosts
         env:
           SSH_KEY_B64: ${{ secrets.SSH_KEY_B64 }}
-          VM_HOST: 34.89.101.59
+          VM_HOST: 34.142.118.63
       
 
       - name: Save input metrics used for AI
@@ -196,7 +196,7 @@ jobs:
           scp -i ~/.ssh/gha_key all_uploads/* $VM_USER@$VM_HOST:~/ROS2_CICD/dashboard_artifacts/
         env:
           VM_USER: ec24136
-          VM_HOST: 34.89.101.59
+          VM_HOST: 34.142.118.63
 
   # docker:
   #   needs: simulate

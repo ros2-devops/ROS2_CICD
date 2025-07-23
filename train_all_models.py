@@ -38,11 +38,16 @@ X_train_clean = X_train[y_train == 0]
 
 # ─── Isolation Forest ──────────────────────────────────
 print("🌲 Training Isolation Forest...")
-iforest = IsolationForest(contamination=0.36, random_state=42)
+iforest = IsolationForest(contamination='auto', random_state=42)
 iforest.fit(X_train_clean)
-y_pred_iforest = iforest.predict(X_test)
-y_pred_iforest = np.where(y_pred_iforest == -1, 1, 0)
 
+# Compute scores and custom threshold
+if_scores = -iforest.decision_function(X_train_clean)
+if_threshold = np.percentile(if_scores, 95)
+
+# Inference
+if_test_scores = -iforest.decision_function(X_test)
+y_pred_iforest = (if_test_scores > if_threshold).astype(int)
 
 # ─── Autoencoder ───────────────────────────────────────
 print("🧠 Training Autoencoder...")
@@ -63,10 +68,9 @@ autoencoder.fit(
     verbose=1
 )
 
-
-recon_errors = np.mean(np.square(X_test - autoencoder.predict(X_test, verbose=0)), axis=1)
-ae_threshold = np.percentile(recon_errors, 100 * (1 - y_test.mean()))
-y_pred_ae = (recon_errors > ae_threshold).astype(int)
+ae_recon_errors = np.mean(np.square(X_test - autoencoder.predict(X_test, verbose=0)), axis=1)
+ae_threshold = np.percentile(np.mean(np.square(X_train_clean - autoencoder.predict(X_train_clean, verbose=0)), axis=1), 95)
+y_pred_ae = (ae_recon_errors > ae_threshold).astype(int)
 
 # ─── CNN-LSTM ───────────────────────────────────────────
 print("📈 Preparing data for CNN-LSTM...")
@@ -84,6 +88,9 @@ y_seq = np.array(y_seq)
 X_seq_train, X_seq_test, y_seq_train, y_seq_test = train_test_split(
     X_seq, y_seq, test_size=0.2, random_state=42, stratify=y_seq
 )
+
+# Clean training sequences
+X_seq_train_clean = X_seq_train[y_seq_train == 0]
 
 print("🌀 Training CNN-LSTM...")
 model_input = Input(shape=(SEQ_LEN, features))
@@ -103,7 +110,10 @@ cnn_lstm.fit(
     verbose=1
 )
 
-y_pred_lstm = (cnn_lstm.predict(X_seq_test, verbose=0) > 0.5).astype(int)
+cnn_train_scores = cnn_lstm.predict(X_seq_train_clean, verbose=0).flatten()
+cnn_threshold = np.percentile(cnn_train_scores, 95)
+
+y_pred_lstm = (cnn_lstm.predict(X_seq_test, verbose=0).flatten() > cnn_threshold).astype(int)
 
 # ─── Evaluation ────────────────────────────────────────
 print("🧾 Generating evaluation report...")
@@ -116,25 +126,12 @@ results = {
 with open(os.path.join(MODEL_DIR, "model_eval_report.json"), "w") as f:
     json.dump(results, f, indent=2)
 
-# ─── Save Isolation Forest ───
+# ─── Save models and thresholds ───
 joblib.dump(iforest, os.path.join(MODEL_DIR, "isolation_forest_model.pkl"))
-
-# ─── Save Autoencoder and threshold ───
 autoencoder.save(os.path.join(MODEL_DIR, "autoencoder_model.keras"))
-with open(os.path.join(MODEL_DIR, "autoencoder_threshold.pkl"), "wb") as f:
-    joblib.dump(ae_threshold, f)
-
-# ─── Save CNN-LSTM and threshold ───
+joblib.dump(ae_threshold, os.path.join(MODEL_DIR, "autoencoder_threshold.pkl"))
 cnn_lstm.save(os.path.join(MODEL_DIR, "cnn_lstm_model.keras"))
-
-# Use the same threshold logic for CNN-LSTM
-cnn_scores = cnn_lstm.predict(X_seq_test, verbose=0).flatten()
-cnn_threshold = np.percentile(cnn_scores, 100 * (1 - y_seq_test.mean()))
-with open(os.path.join(MODEL_DIR, "cnn_lstm_threshold.pkl"), "wb") as f:
-    joblib.dump(cnn_threshold, f)
-
-# ─── Save Scaler ───
+joblib.dump(cnn_threshold, os.path.join(MODEL_DIR, "cnn_lstm_threshold.pkl"))
 joblib.dump(scaler, os.path.join(MODEL_DIR, "scaler.pkl"))
-
 
 print("✅ Training complete. Artifacts saved to:", MODEL_DIR)
