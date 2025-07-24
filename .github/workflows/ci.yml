@@ -56,126 +56,77 @@ jobs:
       - name: Run simulation with assertions
         id: run_sim
         run: |
-          docker run --rm -it \
-          -v "$PWD:/mnt" \
-          -w /mnt/ \
-          ros2_ci:latest  \
-          bash -c "
+          docker run --rm -e DISPLAY=:99 -v "$PWD:/mnt" -w /mnt ros2_ci:latest bash -c "
             apt update && apt install -y \
-            python3-pip python3-colcon-common-extensions \
-            wget curl git lsb-release gnupg2 locales \
-            libgl1 libglu1-mesa xvfb libxcb-cursor0 \
-            libx11-xcb1 libxcb-xinerama0 libxkbcommon-x11-0 \
-            libqt5gui5 libqt5widgets5 libqt5core5a libqt5x11extras5 \
-            software-properties-common &&
+              python3-pip python3-colcon-common-extensions \
+              wget curl git lsb-release gnupg2 locales \
+              libgl1 libglu1-mesa xvfb libxcb-cursor0 \
+              libx11-xcb1 libxcb-xinerama0 libxkbcommon-x11-0 \
+              libqt5gui5 libqt5widgets5 libqt5core5a libqt5x11extras5 \
+              software-properties-common
+
             cd /mnt/ros2_ws &&
-            rm -rf build install log
-            source /opt/ros/humble/setup.bash
-            colcon build
+            rm -rf build install log &&
+            source /opt/ros/humble/setup.bash &&
+            colcon build &&
             source install/setup.bash &&
             cd .. &&
-                export QT_QPA_PLATFORM=offscreen
-            xvfb-run -a webots --stdout --batch --no-rendering "ros2_ws/src/sim_demo/worlds/${sc}.wbt" > webots_output.log 2>&1 &
-            WEBOTS_PID=$!
 
-            sleep 2  # Allow Webots to initialize
+            export QT_QPA_PLATFORM=offscreen
+            xvfb-run -a webots --stdout --batch --no-rendering ros2_ws/src/sim_demo/worlds/${{ matrix.scenario }}.wbt > webots_output.log 2>&1 &
+            WEBOTS_PID=\$!
+
+            sleep 2  # Let Webots initialize
 
             (
               set +eu
               source /opt/ros/humble/setup.bash
               source ros2_ws/install/setup.bash
 
-              # Launch metrics_collector in background
-              SCENARIO=${sc} SIM_DURATION=${DURATION} LOG_INTERVAL=${INTERVAL} \
+              # Launch metrics collector
+              SCENARIO=${{ matrix.scenario }} SIM_DURATION=3m LOG_INTERVAL=0.5 \
                 ros2 run ros2_observability metrics_collector &
-              COLLECTOR_PID=$!
+              COLLECTOR_PID=\$!
 
               SECONDS=0
-              while kill -0 $COLLECTOR_PID 2>/dev/null; do
+              while kill -0 \$COLLECTOR_PID 2>/dev/null; do
                 sleep 2
-                if [[ "$SECONDS" -gt 95 ]]; then
-                  echo "⏱️ Timeout hit for $sc [$i/$REPEAT]"
-                  # Force kill Webots after timeout or normal completion
-                  kill -TERM $WEBOTS_PID 2>/dev/null || true
+                if [[ \$SECONDS -gt 185 ]]; then
+                  echo '⏱️ Timeout hit for scenario: ${{ matrix.scenario }}'
+                  kill -TERM \$WEBOTS_PID 2>/dev/null || true
                   sleep 2
-                  kill -KILL $WEBOTS_PID 2>/dev/null || true
-                  wait $WEBOTS_PID 2>/dev/null || true
-
-                  # Clean stray Webots/Xvfb processes just in case
+                  kill -KILL \$WEBOTS_PID 2>/dev/null || true
+                  wait \$WEBOTS_PID 2>/dev/null || true
                   pkill -f webots 2>/dev/null || true
                   pkill -f Xvfb 2>/dev/null || true
-
-                  kill -TERM $COLLECTOR_PID
-                  wait $COLLECTOR_PID || true
+                  kill -TERM \$COLLECTOR_PID 2>/dev/null || true
+                  wait \$COLLECTOR_PID || true
                   break
                 fi
               done
 
-              wait $COLLECTOR_PID
-              COLLECTOR_STATUS=$?
-
-              if [[ $COLLECTOR_STATUS -ne 0 && $COLLECTOR_STATUS -ne 143 ]]; then
-                echo "❌ metrics_collector failed with code $COLLECTOR_STATUS for $sc [$i/$REPEAT]"
+              wait \$COLLECTOR_PID
+              STATUS=\$?
+              if [[ \$STATUS -ne 0 && \$STATUS -ne 143 ]]; then
+                echo '❌ metrics_collector exited with code' \$STATUS
               fi
-
             )
-            echo "[CI] Simulation complete"
+
+            echo '[CI] Simulation complete'
+
             RESULT_FILE=assertion_result_${{ matrix.scenario }}.txt
-            if [[ -f "$RESULT_FILE" ]]; then
-              RESULT=$(cat "$RESULT_FILE")
-              echo "Assertion Result: $RESULT"
-              echo "result=$RESULT" >> $GITHUB_OUTPUT
-              if [[ "$RESULT" == "FAIL" ]]; then
-                echo "::error Assertion failed during simulation."
-                
+            if [[ -f \$RESULT_FILE ]]; then
+              RESULT=\$(cat \$RESULT_FILE)
+              echo 'Assertion Result: '\$RESULT
+              echo 'result='\$RESULT >> \$GITHUB_OUTPUT
+              if [[ \$RESULT == 'FAIL' ]]; then
+                echo '::error ::Assertion failed during simulation.'
               fi
             else
-              echo "::error assertion_result.txt not found."
-              
-            fi"
+              echo '::error ::assertion_result.txt not found.'
+            fi
+          "
 
-      - name: Upload simulation metrics
-        uses: actions/upload-artifact@v4
-        with:
-          name: ros_metrics_${{ matrix.scenario }}
-          path: ros_metrics_${{ matrix.scenario }}.csv
-
-      - name: Upload assertion result
-        uses: actions/upload-artifact@v4
-        with:
-          name: assertion_result_${{ matrix.scenario }}
-          path: assertion_result_${{ matrix.scenario }}.txt
-
-      - name: Upload simulation log
-        uses: actions/upload-artifact@v4
-        with:
-          name: simulation_log_${{ matrix.scenario }}
-          path: simulation_log_${{ matrix.scenario }}.csv
-
-      - name: Run AI anomaly detection for all models
-        run: |
-          export SCENARIO=${{ matrix.scenario }}
-          for model in iforest ae cnn_lstm; do
-            export AI_MODEL=$model
-            echo " Running detection: $model on $SCENARIO"
-            python3 flag_anomalies.py
-          done
-          
-      - name: Compare detectors & pick best
-        run: |
-          export SCENARIO=${{ matrix.scenario }}
-          python3 ci/compare_models.py
-          cat best_model_${{ matrix.scenario }}.txt
-          # surface in job summary
-          echo "### ${SCENARIO}: $(cat best_model_${{ matrix.scenario }}.txt)" >> $GITHUB_STEP_SUMMARY
-
-      - name: Upload best-model artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: best_model_${{ matrix.scenario }}
-          path: |
-            best_model_${{ matrix.scenario }}.txt
-            best_model_${{ matrix.scenario }}.md
 
       - name: Upload AI anomaly results per model
         run: |
