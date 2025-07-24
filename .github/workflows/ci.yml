@@ -89,6 +89,7 @@ jobs:
                 ros2 run ros2_observability metrics_collector &
               COLLECTOR_PID=\$!
 
+              RESULT_FILE=/mnt/assertion_result_${{ matrix.scenario }}.txt
               SECONDS=0
               while kill -0 \$COLLECTOR_PID 2>/dev/null; do
                 sleep 2
@@ -115,7 +116,7 @@ jobs:
 
             echo '[CI] Simulation complete'
 
-            RESULT_FILE=/mnt/assertion_result_${{ matrix.scenario }}.txt
+            
             METRICS_FILE=/mnt/ros_metrics_${{ matrix.scenario }}.csv
             LOG_FILE=/mnt/simulation_log_${{ matrix.scenario }}.csv
 
@@ -148,6 +149,12 @@ jobs:
         with:
           name: simulation_log_${{ matrix.scenario }}
           path: simulation_log_${{ matrix.scenario }}.csv
+
+      - name: Debug: list files before detection
+        run: |
+          ls -lh
+          file ros_metrics_${{ matrix.scenario }}.csv || echo "❌ Missing metrics file"
+
 
       - name: Run AI anomaly detection for all models
         run: |
