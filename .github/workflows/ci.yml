@@ -86,7 +86,10 @@ jobs:
 
               # Launch metrics collector
               SCENARIO=${{ matrix.scenario }} SIM_DURATION=3m LOG_INTERVAL=0.5 \
-                ros2 run ros2_observability metrics_collector &
+              OUTPUT_CSV=/mnt/ros_metrics_${{ matrix.scenario }}.csv \
+              OUTPUT_LOG=/mnt/simulation_log_${{ matrix.scenario }}.csv \
+              ros2 run ros2_observability metrics_collector
+              echo "Will write metrics to: /mnt/ros_metrics_${{ matrix.scenario }}.csv" &
               COLLECTOR_PID=\$!
 
               RESULT_FILE=/mnt/assertion_result_${{ matrix.scenario }}.txt
