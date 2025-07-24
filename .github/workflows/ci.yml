@@ -56,6 +56,7 @@ jobs:
       - name: Run simulation with assertions
         id: run_sim
         run: |
+          docker build -f Dockerfile -t ros2_ci:latest .
           docker run --rm -e DISPLAY=:99 -v "$PWD:/mnt" -w /mnt ros2_ci:latest bash -c "
             apt update && apt install -y \
               python3-pip python3-colcon-common-extensions \
