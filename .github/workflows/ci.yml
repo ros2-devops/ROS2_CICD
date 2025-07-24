@@ -128,6 +128,48 @@ jobs:
             fi
           "
 
+      - name: Upload simulation metrics
+        uses: actions/upload-artifact@v4
+        with:
+          name: ros_metrics_${{ matrix.scenario }}
+          path: ros_metrics_${{ matrix.scenario }}.csv
+
+      - name: Upload assertion result
+        uses: actions/upload-artifact@v4
+        with:
+          name: assertion_result_${{ matrix.scenario }}
+          path: assertion_result_${{ matrix.scenario }}.txt
+
+      - name: Upload simulation log
+        uses: actions/upload-artifact@v4
+        with:
+          name: simulation_log_${{ matrix.scenario }}
+          path: simulation_log_${{ matrix.scenario }}.csv
+
+      - name: Run AI anomaly detection for all models
+        run: |
+          export SCENARIO=${{ matrix.scenario }}
+          for model in iforest ae cnn_lstm; do
+            export AI_MODEL=$model
+            echo " Running detection: $model on $SCENARIO"
+            python3 flag_anomalies.py
+          done
+          
+      - name: Compare detectors & pick best
+        run: |
+          export SCENARIO=${{ matrix.scenario }}
+          python3 ci/compare_models.py
+          cat best_model_${{ matrix.scenario }}.txt
+          # surface in job summary
+          echo "### ${SCENARIO}: $(cat best_model_${{ matrix.scenario }}.txt)" >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload best-model artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: best_model_${{ matrix.scenario }}
+          path: |
+            best_model_${{ matrix.scenario }}.txt
+            best_model_${{ matrix.scenario }}.md
 
       - name: Upload AI anomaly results per model
         run: |
