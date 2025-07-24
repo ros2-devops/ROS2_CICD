@@ -115,7 +115,10 @@ jobs:
 
             echo '[CI] Simulation complete'
 
-            RESULT_FILE=assertion_result_${{ matrix.scenario }}.txt
+            RESULT_FILE=/mnt/assertion_result_${{ matrix.scenario }}.txt
+            METRICS_FILE=/mnt/ros_metrics_${{ matrix.scenario }}.csv
+            LOG_FILE=/mnt/simulation_log_${{ matrix.scenario }}.csv
+
             if [[ -f \$RESULT_FILE ]]; then
               RESULT=\$(cat \$RESULT_FILE)
               echo 'Assertion Result: '\$RESULT
