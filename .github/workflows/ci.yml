@@ -150,7 +150,7 @@ jobs:
           name: simulation_log_${{ matrix.scenario }}
           path: simulation_log_${{ matrix.scenario }}.csv
 
-      - name: Debug: list files before detection
+      - name: list files before detection
         run: |
           ls -lh
           file ros_metrics_${{ matrix.scenario }}.csv || echo "❌ Missing metrics file"
