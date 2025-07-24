@@ -23,6 +23,7 @@ jobs:
         with:
           required-ros-distributions: humble
 
+    
       - name: Install dependencies
         run: |
           sudo apt update
@@ -32,17 +33,17 @@ jobs:
             ros-humble-ros-base \
             ros-humble-vision-msgs \
             ros-humble-ament-cmake \
-            python3-matplotlib || sudo apt -f install -y
+            python3-matplotlib \
             wget curl git lsb-release gnupg2 locales \
-              libgl1 libglu1-mesa xvfb libxcb-cursor0 \
-              libx11-xcb1 libxcb-xinerama0 libxkbcommon-x11-0 \
-              libqt5gui5 libqt5widgets5 libqt5core5a libqt5x11extras5 \
-              software-properties-common
-
+            libgl1 libglu1-mesa xvfb libxcb-cursor0 \
+            libx11-xcb1 libxcb-xinerama0 libxkbcommon-x11-0 \
+            libqt5gui5 libqt5widgets5 libqt5core5a libqt5x11extras5 \
+            software-properties-common \
+          || sudo apt -f install -y
 
           sudo snap install webots --classic
 
-
+    
       - name: Install Python deps
         run: |
           pip3 install --no-cache-dir --upgrade \
@@ -66,10 +67,9 @@ jobs:
       - name: Run simulation with assertions
         id: run_sim
         run: |
-          
           export QT_QPA_PLATFORM=offscreen
           xvfb-run -a webots --stdout --batch --no-rendering ros2_ws/src/sim_demo/worlds/${{ matrix.scenario }}.wbt > webots_output.log 2>&1 &
-          WEBOTS_PID=\$!
+          WEBOTS_PID=$!
 
           sleep 2  # Let Webots initialize
 
@@ -78,48 +78,52 @@ jobs:
             source /opt/ros/humble/setup.bash
             source ros2_ws/install/setup.bash
 
-            # Launch metrics collector
-            SCENARIO=${{ matrix.scenario }} SIM_DURATION=3m LOG_INTERVAL=0.5 \
-            ros2 run ros2_observability metrics_collector
-            echo "Will write metrics to: /ros_metrics_${{ matrix.scenario }}.csv" &
-            COLLECTOR_PID=\$!
-            RESULT_FILE=/assertion_result_${{ matrix.scenario }}.txt
-          
+            echo "[CI] Launching metrics_collector..."
+            export SCENARIO=${{ matrix.scenario }}
+            export SIM_DURATION=3m
+            export LOG_INTERVAL=0.5
+
+            ros2 run ros2_observability metrics_collector &
+            COLLECTOR_PID=$!
+
+            RESULT_FILE="assertion_result_${SCENARIO}.txt"
+
             SECONDS=0
-            while kill -0 \$COLLECTOR_PID 2>/dev/null; do
+            while kill -0 $COLLECTOR_PID 2>/dev/null; do
               sleep 2
-              if [[ \$SECONDS -gt 185 ]]; then
-                echo ' Timeout hit for scenario: ${{ matrix.scenario }}'
-                kill -TERM \$WEBOTS_PID 2>/dev/null || true
+              if [[ $SECONDS -gt 185 ]]; then
+                echo '⏱️ Timeout hit for scenario: $SCENARIO'
+                kill -TERM $WEBOTS_PID 2>/dev/null || true
                 sleep 2
-                kill -KILL \$WEBOTS_PID 2>/dev/null || true
-                wait \$WEBOTS_PID 2>/dev/null || true
+                kill -KILL $WEBOTS_PID 2>/dev/null || true
+                wait $WEBOTS_PID 2>/dev/null || true
                 pkill -f webots 2>/dev/null || true
                 pkill -f Xvfb 2>/dev/null || true
-                kill -TERM \$COLLECTOR_PID 2>/dev/null || true
-                wait \$COLLECTOR_PID || true
+                kill -TERM $COLLECTOR_PID 2>/dev/null || true
+                wait $COLLECTOR_PID || true
                 break
               fi
             done
 
-            wait \$COLLECTOR_PID
-            STATUS=\$?
-            if [[ \$STATUS -ne 0 && \$STATUS -ne 143 ]]; then
-              echo '❌ metrics_collector exited with code' \$STATUS
+            wait $COLLECTOR_PID
+            STATUS=$?
+            if [[ $STATUS -ne 0 && $STATUS -ne 143 ]]; then
+              echo "❌ metrics_collector exited with code $STATUS"
             fi
           )
 
           echo '[CI] Simulation complete'
-            
-          if [[ -f \$RESULT_FILE ]]; then
-            RESULT=\$(cat \$RESULT_FILE)
-            echo 'Assertion Result: '\$RESULT
-            echo 'result='\$RESULT >> \$GITHUB_OUTPUT
-            if [[ \$RESULT == 'FAIL' ]]; then
-              echo '::error ::Assertion failed during simulation.'
+
+          RESULT_FILE="assertion_result_${{ matrix.scenario }}.txt"
+          if [[ -f "$RESULT_FILE" ]]; then
+            RESULT=$(cat "$RESULT_FILE")
+            echo "Assertion Result: $RESULT"
+            echo "result=$RESULT" >> $GITHUB_OUTPUT
+            if [[ "$RESULT" == "FAIL" ]]; then
+              echo "::error ::Assertion failed during simulation."
             fi
           else
-            echo '::error ::assertion_result.txt not found.'
+            echo "::error ::assertion_result.txt not found."
           fi
 
 
