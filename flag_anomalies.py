@@ -39,7 +39,13 @@ if not set(feature_cols).issubset(df.columns):
 
 X_raw = df[feature_cols].copy()
 scaler = joblib.load(os.path.join(MODEL_DIR, "scaler.pkl"))
-X = scaler.transform(X_raw)
+#X = scaler.transform(X_raw)
+# After loading input CSV
+X = df[feature_cols]
+X_scaled = scaler.transform(X)  # Use same scaler from training
+
+# Feed into AE or CNN-LSTM
+
 
 # ───── Load Model ─────
 model_path = os.path.join(MODEL_DIR, model_file)
@@ -47,9 +53,9 @@ thresh_path = os.path.join(MODEL_DIR, thresh_file) if thresh_file else None
 
 if selector == "iforest":
     model = joblib.load(model_path)
-    preds = model.predict(X)
+    preds = model.predict(X_scaled)
     is_anomaly = preds == -1
-    scores = -model.decision_function(X)
+    scores = -model.decision_function(X_scaled)
     threshold = None
 
 elif selector == "ae":
