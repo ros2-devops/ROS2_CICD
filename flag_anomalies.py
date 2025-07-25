@@ -18,7 +18,7 @@ recon_plot = f"recon_error_{selector}_{scenario}.png"
 feature_cols = [
     "CPU", "Memory", "CPU_roll", "CPU_slope", "Mem_roll", "Mem_slope",
     "CPU_user", "CPU_sys", "CPU_count", "CPU_freq",
-    "Disk_read", "Disk_write", "Net_sent", "Net_recv",
+    "Disk_read", "Disk_write", "Net_sent", "Net_recv"
 ]
 
 
