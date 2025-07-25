@@ -127,6 +127,23 @@ jobs:
           fi
 
 
+      - name: Save inference scores for histogram
+        run: |
+          export SCENARIO=${{ matrix.scenario }}
+          for model in iforest ae cnn_lstm; do
+            export AI_MODEL=$model
+            python3 ci/save_inference_scores.py
+          done
+
+      - name: Upload score histograms
+        uses: actions/upload-artifact@v4
+        with:
+          name: inference_scores_${{ matrix.scenario }}
+          path: |
+            scores_*.npy
+            scores_*.png
+
+
       - name: Upload simulation metrics
         uses: actions/upload-artifact@v4
         with:
