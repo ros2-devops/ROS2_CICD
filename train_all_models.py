@@ -14,6 +14,14 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Input, Dense, LSTM, Conv1D, MaxPooling1D
 from tensorflow.keras.callbacks import EarlyStopping
 
+def compute_iqr_threshold(scores, label=""):
+    q1 = np.percentile(scores, 25)
+    q3 = np.percentile(scores, 75)
+    iqr = q3 - q1
+    threshold = q3 + 1.5 * iqr
+    print(f"📏 {label} threshold (IQR): {threshold:.6f}")
+    return threshold
+
 # ─── Config ─────────────────────────────────────────────
 INPUT_CSV = "data_training_full/ros_metrics_relabelled.csv"
 MODEL_DIR = "trained_models_new"
@@ -22,7 +30,7 @@ os.makedirs(MODEL_DIR, exist_ok=True)
 # ─── Load and Prepare Dataset ──────────────────────────
 print("📦 Loading dataset...")
 df = pd.read_csv(INPUT_CSV)
-X = df.drop(columns=["Time", "Scenario","Temperature" , "CPU_viol", "Mem_viol" , "Run", "Anomaly"])
+X = df.drop(columns=["Time", "Scenario", "Temperature", "CPU_viol", "Mem_viol", "Run", "Anomaly"])
 y = df["Anomaly"]
 
 scaler = StandardScaler()
@@ -40,7 +48,7 @@ iforest = IsolationForest(contamination='auto', random_state=42)
 iforest.fit(X_train_clean)
 
 if_train_scores = -iforest.decision_function(X_train_clean)
-if_threshold = np.percentile(if_train_scores, 98)
+if_threshold = compute_iqr_threshold(if_train_scores, label="IForest")
 
 if_test_scores = -iforest.decision_function(X_test)
 y_pred_iforest = (if_test_scores > if_threshold).astype(int)
@@ -64,10 +72,10 @@ autoencoder.fit(
     verbose=1
 )
 
-print("📏 Setting AE threshold based on clean reconstruction errors...")
+print("📏 Setting AE threshold based on IQR...")
 recon_train = autoencoder.predict(X_train_clean, verbose=0)
 recon_errors_train = np.mean(np.square(X_train_clean - recon_train), axis=1)
-ae_threshold = np.percentile(recon_errors_train, 98)
+ae_threshold = compute_iqr_threshold(recon_errors_train, label="AE")
 
 recon_test = autoencoder.predict(X_test, verbose=0)
 recon_errors_test = np.mean(np.square(X_test - recon_test), axis=1)
@@ -108,9 +116,9 @@ cnn_lstm.fit(
     verbose=1
 )
 
-print("📏 Setting CNN-LSTM threshold from clean scores...")
+print("📏 Setting CNN-LSTM threshold from clean scores (IQR)...")
 cnn_train_scores = cnn_lstm.predict(X_seq_train_clean, verbose=0).flatten()
-cnn_threshold = np.percentile(cnn_train_scores, 98)
+cnn_threshold = compute_iqr_threshold(cnn_train_scores, label="CNN-LSTM")
 
 cnn_test_scores = cnn_lstm.predict(X_seq_test, verbose=0).flatten()
 y_pred_cnn = (cnn_test_scores > cnn_threshold).astype(int)
