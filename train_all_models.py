@@ -22,8 +22,7 @@ os.makedirs(MODEL_DIR, exist_ok=True)
 # ─── Load and Prepare Dataset ──────────────────────────
 print("📦 Loading dataset...")
 df = pd.read_csv(INPUT_CSV)
-df = df.drop(columns=["Time", "Scenario", "Run"])
-X = df.drop(columns=["Anomaly"])
+X = df.drop(columns=["Time", "Scenario","Temperature" , "CPU_viol", "Mem_viol" , "Run", "Anomaly"])
 y = df["Anomaly"]
 
 scaler = StandardScaler()
