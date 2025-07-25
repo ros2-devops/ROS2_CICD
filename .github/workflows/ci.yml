@@ -174,7 +174,7 @@ jobs:
           for model in iforest ae cnn_lstm; do
             export AI_MODEL=$model
             echo " Running detection: $model on $SCENARIO"
-            python3 flag_anomalies.py
+            OVERRIDE_THRESHOLD=true python3 flag_anomalies.py
           done
           
       - name: Compare detectors & pick best
