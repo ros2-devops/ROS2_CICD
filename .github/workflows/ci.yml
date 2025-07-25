@@ -80,7 +80,7 @@ jobs:
 
             echo "[CI] Launching metrics_collector..."
             export SCENARIO=${{ matrix.scenario }}
-            export SIM_DURATION=3m
+            export SIM_DURATION=180
             export LOG_INTERVAL=0.5
 
             ros2 run ros2_observability metrics_collector &
