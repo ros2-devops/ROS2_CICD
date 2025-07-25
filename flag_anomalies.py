@@ -46,17 +46,18 @@ thresh_path = os.path.join(MODEL_DIR, thresh_file) if thresh_file else None
 
 if selector == "iforest":
     model = joblib.load(model_path)
-    preds = model.predict(X_scaled)
-    is_anomaly = preds == -1
     scores = -model.decision_function(X_scaled)
-    threshold = None  # IForest doesn't threshold explicitly
+    threshold = None  # Not used explicitly
+    is_anomaly = model.predict(X_scaled) == -1
 
 elif selector == "ae":
     model = load_model(model_path)
     recon = model.predict(X_scaled, verbose=0)
     scores = np.mean(np.square(X_scaled - recon), axis=1)
-    threshold = joblib.load(thresh_path) if thresh_file else np.percentile(scores, 95)
-    if use_iqr:
+    threshold = np.percentile(scores, 95)
+    if not use_iqr and thresh_file:
+        threshold = joblib.load(thresh_path)
+    elif use_iqr:
         q1, q3 = np.percentile(scores, [25, 75])
         threshold = q3 + 1.5 * (q3 - q1)
     is_anomaly = scores > threshold
@@ -69,12 +70,15 @@ elif selector == "cnn_lstm":
 
     X_seq = np.array([X_scaled[i:i+SEQ_LEN] for i in range(len(X_scaled) - SEQ_LEN)])
     y_pred = model.predict(X_seq, verbose=0).flatten()
-    full_scores = np.concatenate([np.full(SEQ_LEN, y_pred[0]), y_pred])[:len(X_scaled)]
-    scores = full_scores
-    threshold = joblib.load(thresh_path) if thresh_file else 0.5
-    if use_iqr:
+    scores = np.concatenate([np.full(SEQ_LEN, y_pred[0]), y_pred])[:len(X_scaled)]
+
+    threshold = np.percentile(scores, 95)
+    if not use_iqr and thresh_file:
+        threshold = joblib.load(thresh_path)
+    elif use_iqr:
         q1, q3 = np.percentile(scores, [25, 75])
         threshold = q3 + 1.5 * (q3 - q1)
+
     is_anomaly = scores > threshold
 
 else:
@@ -87,7 +91,7 @@ df_result["score"] = scores
 df_result["Scenario"] = scenario
 df_result["TimeIndex"] = df.index
 
-# Human-readable reasons
+# Human-readable explanations
 explanations = []
 for _, row in df_result.iterrows():
     if not row["anomaly"]:
